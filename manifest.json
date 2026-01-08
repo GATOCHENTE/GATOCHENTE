@@ -1,0 +1,16 @@
+{
+  "name": "GATOCHENTE",
+  "short_name": "GATOCHENTE",
+  "description": "Página oficial de GATOCHENTE",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ff8a00",
+  "theme_color": "#ff8a00",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}
