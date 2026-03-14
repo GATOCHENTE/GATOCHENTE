@@ -866,35 +866,3 @@ footer p{color:#333; font-size:14px; margin:0;}
 .home-card{margin-bottom:14px;}
 
 }
-
-/* BUSCADOR */
-
-#search{
-
-width:clamp(90px,12vw,160px);
-
-padding:6px 10px;
-
-border:none;
-border-radius:12px;
-
-background:white;
-
-transition:
-width .35s cubic-bezier(.25,.8,.25,1),
-box-shadow .2s;
-
-}
-
-/* cuando se usa */
-
-#search:focus{
-
-width:clamp(140px,18vw,220px);
-
-outline:none;
-
-box-shadow:
-0 4px 10px rgba(0,0,0,0.08);
-
-}
