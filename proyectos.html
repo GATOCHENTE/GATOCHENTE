@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Proyectos - GATOCHENTE</title>
+
+<link rel="icon" href="favicon.png">
+<link rel="manifest" href="manifest.json">
+
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css?v=20260318b">
+
+</head>
+
+<body>
+
+<nav class="navbar">
+
+<div class="nav-left">
+<img src="logo.png" class="logo">
+</div>
+
+<div class="nav-center">
+
+<div class="pill-selector"></div>
+
+<a href="/" class="nav-item">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<path d="M3 11l9-7 9 7"></path>
+<path d="M5 10v10h14V10"></path>
+</svg>
+<span>Inicio</span>
+</a>
+
+<a href="/sobre-mi" class="nav-item">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<circle cx="12" cy="8" r="4"></circle>
+<path d="M4 20c2-4 14-4 16 0"></path>
+</svg>
+<span>Sobre</span>
+</a>
+
+<a href="/proyectos" class="nav-item active">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<rect x="3" y="4" width="18" height="14" rx="2"></rect>
+<path d="M3 10h18"></path>
+</svg>
+<span>Proyectos</span>
+</a>
+
+<a href="/contacto" class="nav-item">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<path d="M4 6h16v12H4z"></path>
+<path d="M4 6l8 7 8-7"></path>
+</svg>
+<span>Contacto</span>
+</a>
+
+</div>
+
+<div class="nav-divider" aria-hidden="true"></div>
+
+<div class="nav-right">
+<button type="button" class="nav-action search-toggle" id="search-toggle" aria-label="Abrir buscador">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<circle cx="11" cy="11" r="6"></circle>
+<path d="M20 20l-4.2-4.2"></path>
+</svg>
+<span>Buscar</span>
+</button>
+</div>
+
+<div class="nav-search-overlay" id="nav-search-overlay" aria-hidden="true">
+<input type="text" id="search-input" placeholder="Buscar en la página...">
+<button type="button" class="search-close" id="search-close" aria-label="Cerrar buscador">
+<svg viewBox="0 0 24 24">
+<path d="M6 6l12 12"></path>
+<path d="M18 6l-12 12"></path>
+</svg>
+</button>
+</div>
+
+</nav>
+
+<section class="projects">
+
+<div class="card">
+
+<img src="img/proyecto1.jpg">
+
+<h3>BAÑO ECOLÓGICO - 2023</h3>
+
+<p>
+Maqueta de baño ecológico con sistema de ahorro de agua y reciclaje de residuos.
+Utiliza Circuitos, Protoboard, Bomba de agua y Pulsador.
+</p>
+
+<div class="card-tags">
+<span>Circuitos</span>
+<span>Protoboard</span>
+<span>Bomba de agua</span>
+<span>Pulsador</span>
+</div>
+
+</div>
+
+<div class="card">
+
+<img src="img/proyecto2.jpg">
+
+<h3>INNOVADOR PASO PEATONAL - 2024</h3>
+
+<p>
+Maqueta de paso peatonal con barreras automáticas y semáforo inteligente. Utiliza un temporizador para avisar a peatones y vehículos, activando las barreras y cambiando el semáforo en consecuencia.
+Utiliza Arduino, Protoboard, LEDs y Servomotores.
+</p>
+
+<div class="card-tags">
+<span>Arduino</span>
+<span>Protoboard</span>
+<span>LEDs</span>
+<span>Servomotores</span>
+</div>
+
+</div>
+
+<div class="card">
+
+<img src="img/proyecto3.jpg">
+
+<h3>DETECTA Y PROTEGE - 2025</h3>
+
+<p>
+Maqueta de sistema de seguridad ante sismos. Utiliza sensores de movimiento y vibración para detectar actividad sísmica.
+Utiliza Arduino, Protoboard, Sensores de Vibración y LEDs.
+</p>
+
+<div class="card-tags">
+<span>Arduino</span>
+<span>Sensores</span>
+<span>LEDs</span>
+</div>
+
+</div>
+
+</section>
+
+<footer>
+
+<p id="year"></p>
+
+</footer>
+
+<script src="script.js?v=20260318l"></script>
+
+</body>
+</html>
