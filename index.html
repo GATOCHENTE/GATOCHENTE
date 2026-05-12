@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Portafolio de GATOCHENTE: desarrollo web, proyectos con Arduino, Raspberry Pi, tecnología escolar y creatividad.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GATOCHENTE">
+<meta property="og:title" content="GATOCHENTE">
+<meta property="og:description" content="Portafolio de tecnología, programación, Arduino, Raspberry Pi y creatividad.">
+<meta property="og:url" content="https://www.gatochente.com/">
+<meta property="og:image" content="https://www.gatochente.com/img/preview.jpg">
+<meta property="og:image:alt" content="Banner de vista previa de GATOCHENTE">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="GATOCHENTE">
+<meta name="twitter:description" content="Portafolio de tecnología, programación, Arduino, Raspberry Pi y creatividad.">
+<meta name="twitter:image" content="https://www.gatochente.com/img/preview.jpg">
+
+<title>GATOCHENTE</title>
+
+<link rel="icon" href="favicon.png">
+<link rel="manifest" href="manifest.json">
+
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css?v=20260512g">
+
+</head>
+
+<body>
+
+<nav class="navbar">
+
+<div class="nav-left">
+<img src="logo.png" class="logo" alt="Logo de GATOCHENTE">
+</div>
+
+<div class="nav-center">
+
+<div class="pill-selector"></div>
+
+<a href="/" class="nav-item">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<path d="M3 11l9-7 9 7"></path>
+<path d="M5 10v10h14V10"></path>
+</svg>
+<span>Inicio</span>
+</a>
+
+<a href="/sobre-mi" class="nav-item">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<circle cx="12" cy="8" r="4"></circle>
+<path d="M4 20c2-4 14-4 16 0"></path>
+</svg>
+<span>Sobre</span>
+</a>
+
+<a href="/proyectos" class="nav-item">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<rect x="3" y="4" width="18" height="14" rx="2"></rect>
+<path d="M3 10h18"></path>
+</svg>
+<span>Proyectos</span>
+</a>
+
+<a href="/contacto" class="nav-item">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<path d="M4 6h16v12H4z"></path>
+<path d="M4 6l8 7 8-7"></path>
+</svg>
+<span>Contacto</span>
+</a>
+
+</div>
+
+<div class="nav-divider" aria-hidden="true"></div>
+
+<div class="nav-right">
+<button type="button" class="nav-action search-toggle" id="search-toggle" aria-label="Abrir buscador">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<circle cx="11" cy="11" r="6"></circle>
+<path d="M20 20l-4.2-4.2"></path>
+</svg>
+<span>Buscar</span>
+</button>
+<button type="button" class="nav-action settings-toggle" id="settings-toggle" aria-label="Abrir ajustes" aria-expanded="false">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M19.4 15a1.8 1.8 0 0 0 .36 2l.05.05a2 2 0 0 1-2.83 2.83l-.05-.05a1.8 1.8 0 0 0-2-.36 1.8 1.8 0 0 0-1.08 1.65V21a2 2 0 0 1-4 0v-.08a1.8 1.8 0 0 0-1.08-1.65 1.8 1.8 0 0 0-2 .36l-.05.05a2 2 0 0 1-2.83-2.83l.05-.05a1.8 1.8 0 0 0 .36-2 1.8 1.8 0 0 0-1.65-1.08H3a2 2 0 0 1 0-4h.08a1.8 1.8 0 0 0 1.65-1.08 1.8 1.8 0 0 0-.36-2l-.05-.05a2 2 0 0 1 2.83-2.83l.05.05a1.8 1.8 0 0 0 2 .36A1.8 1.8 0 0 0 10.28 3V3a2 2 0 0 1 4 0v.08a1.8 1.8 0 0 0 1.08 1.65 1.8 1.8 0 0 0 2-.36l.05-.05a2 2 0 0 1 2.83 2.83l-.05.05a1.8 1.8 0 0 0-.36 2 1.8 1.8 0 0 0 1.65 1.08H21a2 2 0 0 1 0 4h-.08A1.8 1.8 0 0 0 19.4 15z"></path>
+</svg>
+<span>Ajustes</span>
+</button>
+</div>
+
+<div class="nav-search-overlay" id="nav-search-overlay" aria-hidden="true">
+<input type="text" id="search-input" placeholder="Buscar en la página...">
+<button type="button" class="search-close" id="search-close" aria-label="Cerrar buscador">
+<svg viewBox="0 0 24 24">
+<path d="M6 6l12 12"></path>
+<path d="M18 6l-12 12"></path>
+</svg>
+</button>
+</div>
+
+<div class="settings-panel" id="settings-panel" aria-hidden="true">
+<p>Apariencia</p>
+<div class="theme-options" role="group" aria-label="Selector de tema">
+<button type="button" class="theme-option" data-theme-choice="auto">Auto</button>
+<button type="button" class="theme-option" data-theme-choice="light">Claro</button>
+<button type="button" class="theme-option" data-theme-choice="dark">Oscuro</button>
+</div>
+</div>
+
+</nav>
+
+<header class="hero-large">
+
+<div class="hero-overlay"></div>
+
+<div class="hero-large-content">
+
+<h1>GATOCHENTE</h1>
+
+<p>
+Proyectos, tecnología, programación y creatividad.
+</p>
+
+<p class="hero-subtitle">
+Soy un estudiante escolar apasionado por la tecnología, programación y la creatividad. 
+Me encanta el desarrollo web, hacer maquetas con Arduino y Raspberry Pi, y crear proyectos escolares innovadores.
+Combino código limpio con diseño moderno para transformar ideas en realidad.
+</p>
+
+<div class="hero-actions" aria-label="Acciones principales">
+<a href="/proyectos" class="hero-button">Ver proyectos</a>
+<a href="/contacto" class="hero-button hero-button-secondary">Contactarme</a>
+</div>
+
+</div>
+
+</header>
+
+<section class="summary">
+
+<div class="summary-container">
+
+<div class="summary-content">
+
+<h2>Bienvenido</h2>
+
+<p>
+Mi pasión es la tecnología en todas sus formas. Como estudiante escolar, me dedico a aprender y crear proyectos innovadores.
+Desde desarrollo web hasta maquetas con Arduino y Raspberry Pi, busco siempre combinar código de calidad con diseño moderno.
+Estoy aprendiendo constantemente, especialmente Python, para seguir expandiendo mis habilidades tecnológicas.
+</p>
+
+<div class="summary-features">
+
+<div class="feature">
+<h3>🎨 Diseño</h3>
+<p>Interfaces modernas, responsivas y accesibles</p>
+</div>
+
+<div class="feature">
+<h3>💻 Desarrollo</h3>
+<p>Código de calidad, mantenible y eficiente</p>
+</div>
+
+<div class="feature">
+<h3>🚀 Innovación</h3>
+<p>Proyectos creativos que marcan la diferencia</p>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<section class="skills-section" aria-labelledby="skills-title">
+
+<div class="skills-container">
+
+<div class="section-heading">
+<span>Lo que estoy construyendo</span>
+<h2 id="skills-title">Habilidades en crecimiento</h2>
+<p>
+Aprendo combinando software, diseño y electrónica. Cada habilidad aparece porque ya la he usado o la estoy practicando en proyectos reales.
+</p>
+</div>
+
+<div class="skills-grid">
+<span>HTML5</span>
+<span>CSS3</span>
+<span>JavaScript</span>
+<span>Python</span>
+<span>Arduino</span>
+<span>Raspberry Pi</span>
+<span>GitHub</span>
+<span>Figma</span>
+</div>
+
+</div>
+
+</section>
+
+<section class="mini-game-section" aria-labelledby="mini-game-title">
+
+<div class="mini-game-container">
+
+<div class="section-heading mini-game-heading">
+<span>Zona interactiva</span>
+<h2 id="mini-game-title">Mini juego: Gatito Pescador</h2>
+<p>
+Mueve al gatito, pesca los peces brillantes y esquiva los peces explosivos antes de que se acabe el tiempo.
+</p>
+</div>
+
+<div class="game-shell">
+
+<div class="game-topbar" aria-live="polite">
+<div>
+<span>Puntos</span>
+<strong id="game-score">0</strong>
+</div>
+<div>
+<span>Tiempo</span>
+<strong id="game-time">30</strong>
+</div>
+<button type="button" id="game-start" class="game-start">Jugar</button>
+</div>
+
+<div class="rotate-device-message" id="rotate-device-message" aria-live="polite">
+<strong>Rota el dispositivo</strong>
+<span>Para jugar mejor, pon tu celular en horizontal.</span>
+</div>
+
+<div class="game-board" id="game-board" tabindex="0" aria-label="Mini juego Gatito Pescador">
+<div class="game-message" id="game-message">
+<strong>Listo para jugar</strong>
+<span>Usa mouse, dedo o las flechas del teclado.</span>
+</div>
+<div class="player cat-player" id="game-player" aria-hidden="true">
+<span class="cat-ear cat-ear-left"></span>
+<span class="cat-ear cat-ear-right"></span>
+<span class="cat-face">=^.^=</span>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<section class="featured-projects" aria-labelledby="featured-title">
+
+<div class="featured-container">
+
+<div class="section-heading">
+<span>Trabajo destacado</span>
+<h2 id="featured-title">Proyectos que muestran mi forma de pensar</h2>
+<p>
+Me gustan los proyectos que mezclan una idea útil con prototipos físicos, programación y una presentación clara.
+</p>
+</div>
+
+<div class="featured-grid">
+
+<article class="featured-card">
+<img src="img/proyecto2.jpg" alt="Maqueta de paso peatonal inteligente con Arduino">
+<div>
+<p class="project-year">2024</p>
+<h3>Innovador paso peatonal</h3>
+<p>Un prototipo con barreras automáticas, semáforo inteligente, temporizador y servomotores para mejorar la seguridad vial.</p>
+<a href="/proyectos">Ver detalles</a>
+</div>
+</article>
+
+<article class="featured-card">
+<img src="img/proyecto3.jpg" alt="Maqueta de sistema de seguridad ante sismos">
+<div>
+<p class="project-year">2025</p>
+<h3>Detecta y protege</h3>
+<p>Sistema escolar de seguridad que usa sensores de vibración y luces de alerta para responder ante actividad sísmica.</p>
+<a href="/proyectos">Ver detalles</a>
+</div>
+</article>
+
+</div>
+
+</div>
+
+</section>
+
+<footer>
+
+<p id="year"></p>
+
+</footer>
+
+<script src="script.js?v=20260512d"></script>
+
+</body>
+</html>
