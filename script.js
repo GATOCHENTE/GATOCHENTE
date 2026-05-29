@@ -459,6 +459,91 @@ function initProtectedEmailButtons() {
   });
 }
 
+function initVerificationBadges() {
+  const badges = document.querySelectorAll('.verification-badge');
+  if (!badges.length) return;
+
+  const modal = document.createElement('div');
+  modal.className = 'verification-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'verification-title');
+  modal.setAttribute('aria-hidden', 'true');
+  const scriptElement = document.querySelector('script[src*="script.js"]');
+  const assetBase = scriptElement ? scriptElement.src : window.location.href;
+  const checkBadgeUrl = new URL('img/check.PNG', assetBase).href;
+  modal.innerHTML = `
+    <div class="verification-dialog">
+      <div class="verification-hero">
+        <div class="verification-mark" aria-hidden="true">
+          <img src="${checkBadgeUrl}" alt="">
+        </div>
+        <div>
+          <span class="verification-eyebrow">Insignia oficial</span>
+          <h2 id="verification-title">Términos de la insignia de verificación</h2>
+        </div>
+      </div>
+      <p class="verification-lead">
+        La insignia de verificación identifica a un usuario reconocido dentro del portafolio GATOCHENTE. En este sitio, significa que la cuenta, autoría o colaboración mostrada fue agregada directamente por el creador del portafolio y pertenece a una identidad confirmada.
+      </p>
+      <div class="verification-terms">
+        <div>
+          <strong>Identidad confirmada</strong>
+          <span>El usuario corresponde a la persona o colaborador que aparece en el proyecto.</span>
+        </div>
+        <div>
+          <strong>Colaboración auténtica</strong>
+          <span>La participación fue revisada antes de mostrarse públicamente en el sitio.</span>
+        </div>
+        <div>
+          <strong>Uso limitado</strong>
+          <span>La insignia solo tiene validez dentro de GATOCHENTE y no representa verificación externa.</span>
+        </div>
+      </div>
+      <p class="verification-note">
+        Si una cuenta cambia de nombre, deja de colaborar o se detecta información incorrecta, la insignia puede retirarse para mantener la confianza del portafolio.
+      </p>
+      <button type="button" class="verification-close">Entendido</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const closeButton = modal.querySelector('.verification-close');
+
+  function openModal() {
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    closeButton.focus();
+  }
+
+  function closeModal() {
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  badges.forEach((badge) => {
+    badge.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openModal();
+    });
+  });
+
+  closeButton.addEventListener('click', closeModal);
+
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) {
+      closeModal();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && modal.classList.contains('is-open')) {
+      closeModal();
+    }
+  });
+}
+
 function initMiniGame() {
   const board = document.getElementById('game-board');
   const player = document.getElementById('game-player');
@@ -769,4 +854,5 @@ document.addEventListener('click', (event) => {
 
 initContactForm();
 initProtectedEmailButtons();
+initVerificationBadges();
 initMiniGame();
