@@ -586,6 +586,117 @@ function initVerificationBadges() {
   });
 }
 
+function initProfileChips() {
+  const chips = document.querySelectorAll('.user-chip[data-user="gatochente"]');
+  if (!chips.length) return;
+
+  const modal = document.createElement('div');
+  modal.className = 'profile-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'profile-modal-title');
+  modal.setAttribute('aria-hidden', 'true');
+
+  const scriptElement = document.querySelector('script[src*="script.js"]');
+  const assetBase = scriptElement ? scriptElement.src : window.location.href;
+  const avatarUrl = new URL('img/gatochente.jpg', assetBase).href;
+  const checkBadgeUrl = new URL('img/check.PNG', assetBase).href;
+  const catSocialUrl = new URL('img/catsocial.PNG', assetBase).href;
+
+  modal.innerHTML = `
+    <div class="profile-dialog">
+      <button type="button" class="profile-close" aria-label="Cerrar perfil">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6l12 12"></path>
+          <path d="M18 6l-12 12"></path>
+        </svg>
+      </button>
+      <div class="profile-cover" aria-hidden="true"></div>
+      <div class="profile-header">
+        <img class="profile-avatar" src="${avatarUrl}" alt="Foto de perfil de GATOCHENTE">
+        <div class="profile-title-group">
+          <span class="profile-eyebrow">Perfil completo</span>
+          <h2 id="profile-modal-title">GATOCHENTE</h2>
+          <div class="profile-handle-row">
+            <span>@gatochente</span>
+            <button type="button" class="verification-badge profile-verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver términos de la insignia">
+              <img src="${checkBadgeUrl}" alt="Verificado">
+            </button>
+          </div>
+        </div>
+      </div>
+      <p class="profile-bio">
+        Estudiante creador de proyectos con tecnologia, programacion, Arduino, Raspberry Pi y diseno web. Aqui se conectan mis prototipos, ideas escolares y futuras experiencias sociales.
+      </p>
+      <div class="profile-stats" aria-label="Resumen del perfil">
+        <div>
+          <strong>3</strong>
+          <span>Proyectos</span>
+        </div>
+        <div>
+          <strong>2026</strong>
+          <span>Construyendo</span>
+        </div>
+        <div>
+          <strong>CatSocial</strong>
+          <span>Proximamente</span>
+        </div>
+      </div>
+      <button type="button" class="catsocial-button" disabled aria-disabled="true">
+        <img src="${catSocialUrl}" alt="">
+        <span>Ver en CatSocial</span>
+        <strong>Proximamente</strong>
+      </button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const closeButton = modal.querySelector('.profile-close');
+
+  function openProfileModal() {
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    closeButton.focus();
+  }
+
+  function closeProfileModal() {
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  chips.forEach((chip) => {
+    chip.setAttribute('role', 'button');
+    chip.setAttribute('tabindex', '0');
+    chip.setAttribute('aria-label', 'Abrir perfil completo de GATOCHENTE');
+
+    chip.addEventListener('click', (event) => {
+      if (event.target instanceof Element && event.target.closest('.verification-badge')) return;
+      openProfileModal();
+    });
+
+    chip.addEventListener('keydown', (event) => {
+      if (event.target instanceof Element && event.target.closest('.verification-badge')) return;
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      openProfileModal();
+    });
+  });
+
+  closeButton.addEventListener('click', closeProfileModal);
+
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) {
+      closeProfileModal();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && modal.classList.contains('is-open')) {
+      closeProfileModal();
+    }
+  });
+}
+
 function initMiniGame() {
   const board = document.getElementById('game-board');
   const player = document.getElementById('game-player');
@@ -976,5 +1087,6 @@ document.addEventListener('click', (event) => {
 
 initContactForm();
 initProtectedEmailButtons();
+initProfileChips();
 initVerificationBadges();
 initMiniGame();
