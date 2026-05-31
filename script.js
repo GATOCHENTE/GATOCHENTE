@@ -30,6 +30,7 @@ if ("serviceWorker" in navigator) {
 const navItems = [...document.querySelectorAll('.nav-item')];
 const selector = document.querySelector('.pill-selector');
 const navbar = document.querySelector('.navbar');
+const navCenter = document.querySelector('.nav-center');
 const searchToggle = document.getElementById('search-toggle');
 const searchOverlay = document.getElementById('nav-search-overlay');
 const searchClose = document.getElementById('search-close');
@@ -117,6 +118,47 @@ function moveSelector(activeItem) {
   if (!selector || !activeItem) return;
   selector.style.width = activeItem.offsetWidth + 'px';
   selector.style.left = activeItem.offsetLeft + 'px';
+}
+
+function setActiveNavItem(activeItem) {
+  if (!activeItem) return;
+  navItems.forEach((item) => item.classList.remove('active'));
+  activeItem.classList.add('active');
+  moveSelector(activeItem);
+}
+
+function getNearestNavItem(clientX) {
+  if (!navItems.length) return null;
+  return navItems.reduce((closest, item) => {
+    const rect = item.getBoundingClientRect();
+    const distance = Math.abs(clientX - (rect.left + rect.width / 2));
+    if (!closest || distance < closest.distance) {
+      return { item, distance };
+    }
+    return closest;
+  }, null).item;
+}
+
+function moveSelectorWithPointer(clientX) {
+  if (!selector || !navCenter || !navItems.length) return;
+  const navRect = navCenter.getBoundingClientRect();
+  const activeItem = document.querySelector('.nav-item.active') || navItems[0];
+  const selectorWidth = activeItem ? activeItem.offsetWidth : selector.offsetWidth;
+  const minLeft = navItems[0].offsetLeft;
+  const lastItem = navItems[navItems.length - 1];
+  const maxLeft = lastItem.offsetLeft + lastItem.offsetWidth - selectorWidth;
+  const nextLeft = clientX - navRect.left - selectorWidth / 2;
+  selector.style.width = selectorWidth + 'px';
+  selector.style.left = Math.max(minLeft, Math.min(maxLeft, nextLeft)) + 'px';
+}
+
+function navigateToNavItem(item) {
+  if (!item) return;
+  const href = item.getAttribute('href');
+  if (!href) return;
+  const url = new URL(href, window.location.origin);
+  if (normalizePath(url.pathname) === getCurrentPage()) return;
+  window.location.assign(url.href);
 }
 
 function refreshSelector() {
@@ -767,11 +809,91 @@ function initMiniGame() {
 
 navItems.forEach((item) => {
   item.addEventListener('click', () => {
-    navItems.forEach((el) => el.classList.remove('active'));
-    item.classList.add('active');
-    moveSelector(item);
+    setActiveNavItem(item);
   });
 });
+
+initDraggableNavSelector();
+
+function initDraggableNavSelector() {
+  if (!navCenter || !selector || !navItems.length || !window.PointerEvent) return;
+
+  const dragState = {
+    pointerId: null,
+    startX: 0,
+    dragging: false,
+    suppressNextClick: false,
+    hasPointerCapture: false
+  };
+
+  const resetDrag = () => {
+    if (dragState.hasPointerCapture && dragState.pointerId !== null) {
+      try {
+        navCenter.releasePointerCapture(dragState.pointerId);
+      } catch { /* ignore */ }
+    }
+    dragState.pointerId = null;
+    dragState.startX = 0;
+    dragState.dragging = false;
+    dragState.hasPointerCapture = false;
+    selector.classList.remove('is-dragging');
+  };
+
+  navCenter.addEventListener('pointerdown', (event) => {
+    if (!event.isPrimary || event.button > 0) return;
+    if (navbar && (navbar.classList.contains('search-open') || navbar.classList.contains('settings-open'))) return;
+
+    dragState.pointerId = event.pointerId;
+    dragState.startX = event.clientX;
+    dragState.dragging = false;
+    dragState.hasPointerCapture = false;
+  });
+
+  navCenter.addEventListener('pointermove', (event) => {
+    if (dragState.pointerId !== event.pointerId) return;
+
+    const distance = Math.abs(event.clientX - dragState.startX);
+    if (!dragState.dragging && distance < 7) return;
+
+    dragState.dragging = true;
+    dragState.suppressNextClick = true;
+    if (!dragState.hasPointerCapture) {
+      try {
+        navCenter.setPointerCapture(event.pointerId);
+        dragState.hasPointerCapture = true;
+      } catch { /* ignore */ }
+    }
+    selector.classList.add('is-dragging');
+    moveSelectorWithPointer(event.clientX);
+  });
+
+  navCenter.addEventListener('pointerup', (event) => {
+    if (dragState.pointerId !== event.pointerId) return;
+
+    const wasDragging = dragState.dragging;
+    const nearestItem = wasDragging ? getNearestNavItem(event.clientX) : null;
+    resetDrag();
+
+    if (!wasDragging || !nearestItem) return;
+
+    setActiveNavItem(nearestItem);
+    window.setTimeout(() => {
+      navigateToNavItem(nearestItem);
+    }, 0);
+    window.setTimeout(() => {
+      dragState.suppressNextClick = false;
+    }, 250);
+  });
+
+  navCenter.addEventListener('pointercancel', resetDrag);
+
+  navCenter.addEventListener('click', (event) => {
+    if (!dragState.suppressNextClick) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    dragState.suppressNextClick = false;
+  }, true);
+}
 
 window.addEventListener('load', () => {
   updateActiveNav();
