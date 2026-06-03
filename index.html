@@ -24,7 +24,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="style.css?v=20260531b">
+<link rel="stylesheet" href="style.css?v=20260602b">
 
 </head>
 
@@ -33,7 +33,9 @@
 <nav class="navbar">
 
 <div class="nav-left">
+<button type="button" class="logo-button" id="game-menu-toggle" aria-label="Abrir FishingCat" aria-expanded="false" aria-controls="game-nav-panel">
 <img src="logo.png" class="logo" alt="Logo de GATOCHENTE">
+</button>
 </div>
 
 <div class="nav-center">
@@ -109,6 +111,32 @@
 <button type="button" class="theme-option" data-theme-choice="auto">Auto</button>
 <button type="button" class="theme-option" data-theme-choice="light">Claro</button>
 <button type="button" class="theme-option" data-theme-choice="dark">Oscuro</button>
+</div>
+</div>
+
+<div class="game-nav-panel" id="game-nav-panel" aria-hidden="true">
+<div class="game-nav-header">
+<div class="game-nav-copy">
+<span>Jugando ahora</span>
+<strong>FishingCat</strong>
+<small>(Gatito Pescador)</small>
+</div>
+<button type="button" class="game-nav-play" id="game-nav-play">Ver juego completo</button>
+</div>
+<div class="nav-fishingcat" aria-label="FishingCat en la navbar">
+<div class="nav-game-hud" aria-live="polite">
+<span>Puntos <strong id="nav-game-score">0</strong></span>
+<span>Tiempo <strong id="nav-game-time">15</strong></span>
+<button type="button" class="nav-game-start" id="nav-game-start">Jugar</button>
+</div>
+<div class="nav-game-board" id="nav-game-board" tabindex="0" aria-label="Mini FishingCat en la navbar">
+<div class="nav-game-message" id="nav-game-message">Pulsa jugar</div>
+<div class="player cat-player nav-cat-player" id="nav-game-player" aria-hidden="true">
+<span class="cat-ear cat-ear-left"></span>
+<span class="cat-ear cat-ear-right"></span>
+<span class="cat-face">=^.^=</span>
+</div>
+</div>
 </div>
 </div>
 
@@ -192,28 +220,40 @@ Aprendo combinando software, diseño y electrónica. Cada habilidad aparece porq
 </p>
 </div>
 
-<div class="skills-grid">
-<span>HTML5</span>
-<span>CSS3</span>
-<span>JavaScript</span>
-<span>Python</span>
-<span>Arduino</span>
-<span>Raspberry Pi</span>
-<span>GitHub</span>
-<span>Figma</span>
+<div class="skills-carousel" aria-label="Carrusel de plataformas y software en aprendizaje">
+<div class="skills-track">
+<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/html5/6f6a64" alt="" aria-hidden="true"><span>HTML5</span></div>
+<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/css/6f6a64" alt="" aria-hidden="true"><span>CSS3</span></div>
+<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/javascript/6f6a64" alt="" aria-hidden="true"><span>JavaScript</span></div>
+<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/python/6f6a64" alt="" aria-hidden="true"><span>Python</span></div>
+<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/arduino/6f6a64" alt="" aria-hidden="true"><span>Arduino</span></div>
+<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/raspberrypi/6f6a64" alt="" aria-hidden="true"><span>Raspberry Pi</span></div>
+<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/github/6f6a64" alt="" aria-hidden="true"><span>GitHub</span></div>
+<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/figma/6f6a64" alt="" aria-hidden="true"><span>Figma</span></div>
+</div>
+<div class="skills-track" aria-hidden="true">
+<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/html5/6f6a64" alt=""><span>HTML5</span></div>
+<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/css/6f6a64" alt=""><span>CSS3</span></div>
+<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/javascript/6f6a64" alt=""><span>JavaScript</span></div>
+<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/python/6f6a64" alt=""><span>Python</span></div>
+<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/arduino/6f6a64" alt=""><span>Arduino</span></div>
+<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/raspberrypi/6f6a64" alt=""><span>Raspberry Pi</span></div>
+<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/github/6f6a64" alt=""><span>GitHub</span></div>
+<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/figma/6f6a64" alt=""><span>Figma</span></div>
+</div>
 </div>
 
 </div>
 
 </section>
 
-<section class="mini-game-section" aria-labelledby="mini-game-title">
+<section class="mini-game-section" id="fishingcat" aria-labelledby="mini-game-title">
 
 <div class="mini-game-container">
 
 <div class="section-heading mini-game-heading">
 <span>Zona interactiva</span>
-<h2 id="mini-game-title">Mini juego: Gatito Pescador</h2>
+<h2 id="mini-game-title">FishingCat <span>(Gatito Pescador)</span></h2>
 <p>
 Mueve al gatito, pesca los peces brillantes y esquiva los peces explosivos antes de que se acabe el tiempo.
 </p>
@@ -238,7 +278,7 @@ Mueve al gatito, pesca los peces brillantes y esquiva los peces explosivos antes
 <span>Para jugar mejor, pon tu celular en horizontal.</span>
 </div>
 
-<div class="game-board" id="game-board" tabindex="0" aria-label="Mini juego Gatito Pescador">
+<div class="game-board" id="game-board" tabindex="0" aria-label="Mini juego FishingCat Gatito Pescador">
 <div class="game-message" id="game-message">
 <strong>Listo para jugar</strong>
 <span>Usa mouse, dedo o las flechas del teclado.</span>
@@ -322,7 +362,7 @@ Me gustan los proyectos que mezclan una idea útil con prototipos físicos, prog
 
 </footer>
 
-<script src="script.js?v=20260531b"></script>
+<script src="script.js?v=20260601g"></script>
 
 </body>
 </html>

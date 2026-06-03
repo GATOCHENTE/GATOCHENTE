@@ -24,7 +24,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="style.css?v=20260531b">
+<link rel="stylesheet" href="style.css?v=20260601g">
 
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
@@ -35,7 +35,9 @@
 <nav class="navbar">
 
 <div class="nav-left">
+<button type="button" class="logo-button" id="game-menu-toggle" aria-label="Abrir FishingCat" aria-expanded="false" aria-controls="game-nav-panel">
 <img src="logo.png" class="logo" alt="Logo de GATOCHENTE">
+</button>
 </div>
 
 <div class="nav-center">
@@ -114,6 +116,32 @@
 </div>
 </div>
 
+<div class="game-nav-panel" id="game-nav-panel" aria-hidden="true">
+<div class="game-nav-header">
+<div class="game-nav-copy">
+<span>Jugando ahora</span>
+<strong>FishingCat</strong>
+<small>(Gatito Pescador)</small>
+</div>
+<button type="button" class="game-nav-play" id="game-nav-play">Ver juego completo</button>
+</div>
+<div class="nav-fishingcat" aria-label="FishingCat en la navbar">
+<div class="nav-game-hud" aria-live="polite">
+<span>Puntos <strong id="nav-game-score">0</strong></span>
+<span>Tiempo <strong id="nav-game-time">15</strong></span>
+<button type="button" class="nav-game-start" id="nav-game-start">Jugar</button>
+</div>
+<div class="nav-game-board" id="nav-game-board" tabindex="0" aria-label="Mini FishingCat en la navbar">
+<div class="nav-game-message" id="nav-game-message">Pulsa jugar</div>
+<div class="player cat-player nav-cat-player" id="nav-game-player" aria-hidden="true">
+<span class="cat-ear cat-ear-left"></span>
+<span class="cat-ear cat-ear-right"></span>
+<span class="cat-face">=^.^=</span>
+</div>
+</div>
+</div>
+</div>
+
 </nav>
 
 <section class="contact-section">
@@ -174,7 +202,7 @@ Siéntete libre de contactarme sobre consultoría, proyectos, colaboraciones o c
 
 </footer>
 
-<script src="script.js?v=20260531b"></script>
+<script src="script.js?v=20260601g"></script>
 
 </body>
 </html>

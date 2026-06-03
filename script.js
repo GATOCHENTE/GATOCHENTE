@@ -37,6 +37,15 @@ const searchClose = document.getElementById('search-close');
 const searchInput = document.getElementById('search-input');
 const settingsToggle = document.getElementById('settings-toggle');
 const settingsPanel = document.getElementById('settings-panel');
+const gameMenuToggle = document.getElementById('game-menu-toggle');
+const gameNavPanel = document.getElementById('game-nav-panel');
+const gameNavPlay = document.getElementById('game-nav-play');
+const navGameBoard = document.getElementById('nav-game-board');
+const navGamePlayer = document.getElementById('nav-game-player');
+const navGameStart = document.getElementById('nav-game-start');
+const navGameScore = document.getElementById('nav-game-score');
+const navGameTime = document.getElementById('nav-game-time');
+const navGameMessage = document.getElementById('nav-game-message');
 const themeOptions = [...document.querySelectorAll('.theme-option')];
 const themeMediaQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 const themeStorageKey = 'gatochente_theme_preference';
@@ -162,7 +171,7 @@ function navigateToNavItem(item) {
 }
 
 function refreshSelector() {
-  if (navbar && navbar.classList.contains('search-open')) return;
+  if (navbar && (navbar.classList.contains('search-open') || navbar.classList.contains('game-menu-open'))) return;
   let activeItem = document.querySelector('.nav-item.active');
   if (!activeItem && navItems.length) {
     activeItem = navItems[0];
@@ -229,6 +238,7 @@ function highlightText(query) {
 function openSearch() {
   if (!navbar || !searchInput || !searchOverlay) return;
   closeSettings();
+  closeGameMenu();
   navbar.classList.add('search-open');
   searchOverlay.setAttribute('aria-hidden', 'false');
   requestAnimationFrame(() => {
@@ -247,6 +257,7 @@ function closeSearch() {
 function openSettings() {
   if (!navbar || !settingsPanel || !settingsToggle) return;
   closeSearch();
+  closeGameMenu();
   navbar.classList.add('settings-open');
   settingsPanel.setAttribute('aria-hidden', 'false');
   settingsToggle.setAttribute('aria-expanded', 'true');
@@ -266,6 +277,49 @@ function toggleSettings() {
   } else {
     openSettings();
   }
+}
+
+function openGameMenu() {
+  if (!navbar || !gameNavPanel || !gameMenuToggle) return;
+  closeSearch();
+  closeSettings();
+  navbar.classList.add('game-menu-open');
+  gameNavPanel.setAttribute('aria-hidden', 'false');
+  gameMenuToggle.setAttribute('aria-expanded', 'true');
+}
+
+function closeGameMenu() {
+  if (!navbar || !gameNavPanel || !gameMenuToggle) return;
+  navbar.classList.remove('game-menu-open');
+  gameNavPanel.setAttribute('aria-hidden', 'true');
+  gameMenuToggle.setAttribute('aria-expanded', 'false');
+  window.dispatchEvent(new CustomEvent('navFishingCatClose'));
+}
+
+function toggleGameMenu() {
+  if (!navbar) return;
+  if (navbar.classList.contains('game-menu-open')) {
+    closeGameMenu();
+  } else {
+    openGameMenu();
+  }
+}
+
+function goToFishingCat() {
+  const gameSection = document.getElementById('fishingcat');
+  if (gameSection) {
+    const scrollToGame = () => {
+      const targetTop = gameSection.getBoundingClientRect().top + window.scrollY - 92;
+      window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+    };
+    window.location.hash = 'fishingcat';
+    closeGameMenu();
+    window.requestAnimationFrame(scrollToGame);
+    window.setTimeout(scrollToGame, 180);
+    return;
+  }
+  closeGameMenu();
+  window.location.assign('/#fishingcat');
 }
 
 // --- Anti-spam: keyword blacklist ---
@@ -918,8 +972,191 @@ function initMiniGame() {
   updateOrientationState();
 }
 
+function initNavFishingCat() {
+  if (!navGameBoard || !navGamePlayer || !navGameStart || !navGameScore || !navGameTime || !navGameMessage) return;
+
+  const state = {
+    running: false,
+    score: 0,
+    timeLeft: 15,
+    playerX: 0.5,
+    items: [],
+    lastFrame: 0,
+    spawnAt: 0,
+    timerId: null,
+    animationId: null
+  };
+
+  function updateHud() {
+    navGameScore.textContent = String(state.score);
+    navGameTime.textContent = String(state.timeLeft);
+  }
+
+  function setMessage(message, visible = true) {
+    navGameMessage.textContent = message;
+    navGameMessage.classList.toggle('hidden', !visible);
+  }
+
+  function setPlayerX(value) {
+    state.playerX = Math.max(0.08, Math.min(0.92, value));
+    navGamePlayer.style.left = `${state.playerX * 100}%`;
+  }
+
+  function moveFromClientX(clientX) {
+    const bounds = navGameBoard.getBoundingClientRect();
+    setPlayerX((clientX - bounds.left) / bounds.width);
+  }
+
+  function clearItems() {
+    state.items.forEach((item) => item.element.remove());
+    state.items = [];
+  }
+
+  function stopTimers() {
+    window.clearInterval(state.timerId);
+    window.cancelAnimationFrame(state.animationId);
+    state.timerId = null;
+    state.animationId = null;
+  }
+
+  function finishGame(wasStopped = false) {
+    if (!state.running && !wasStopped) return;
+    state.running = false;
+    stopTimers();
+    navGameStart.textContent = 'Jugar';
+    setMessage(wasStopped ? 'Pausado' : `Final: ${state.score}`, true);
+  }
+
+  function spawnItem() {
+    const isBomb = Math.random() < 0.24;
+    const element = document.createElement('div');
+    element.className = `falling-item nav-fish-item ${isBomb ? 'bug' : 'bit'}`;
+    element.innerHTML = '<span class="fish-tail"></span><span class="fish-body"></span><span class="fish-eye"></span>';
+    navGameBoard.appendChild(element);
+
+    const bounds = navGameBoard.getBoundingClientRect();
+    const size = 34;
+    const playerReach = Math.max(navGamePlayer.offsetWidth / 2, 30);
+    const minX = playerReach - size / 2;
+    const maxX = Math.max(minX, bounds.width - playerReach - size / 2);
+    const x = minX + Math.random() * Math.max(1, maxX - minX);
+    const speed = isBomb ? 120 + Math.random() * 60 : 95 + Math.random() * 70;
+    element.style.left = `${x}px`;
+    element.style.top = '-36px';
+    state.items.push({ element, x, y: -36, size, speed, isBomb });
+  }
+
+  function tick(timestamp) {
+    if (!state.running) return;
+    if (!state.lastFrame) state.lastFrame = timestamp;
+    const delta = Math.min(34, timestamp - state.lastFrame) / 1000;
+    state.lastFrame = timestamp;
+
+    if (timestamp >= state.spawnAt) {
+      spawnItem();
+      state.spawnAt = timestamp + Math.max(360, 740 - state.score * 12);
+    }
+
+    const bounds = navGameBoard.getBoundingClientRect();
+    const playerRect = navGamePlayer.getBoundingClientRect();
+
+    state.items = state.items.filter((item) => {
+      item.y += item.speed * delta;
+      item.element.style.top = `${item.y}px`;
+
+      const itemLeft = bounds.left + item.x;
+      const itemRight = itemLeft + item.size;
+      const itemTop = bounds.top + item.y;
+      const itemBottom = itemTop + item.size;
+      const caught = itemRight >= playerRect.left &&
+        itemLeft <= playerRect.right &&
+        itemBottom >= playerRect.top &&
+        itemTop <= playerRect.bottom;
+
+      if (caught) {
+        state.score += item.isBomb ? -2 : 1;
+        if (state.score < 0) state.score = 0;
+        updateHud();
+        item.element.remove();
+        return false;
+      }
+
+      if (item.y > bounds.height + 28) {
+        item.element.remove();
+        return false;
+      }
+
+      return true;
+    });
+
+    state.animationId = window.requestAnimationFrame(tick);
+  }
+
+  function startGame() {
+    clearItems();
+    state.running = true;
+    state.score = 0;
+    state.timeLeft = 15;
+    state.lastFrame = 0;
+    state.spawnAt = 0;
+    setPlayerX(0.5);
+    updateHud();
+    setMessage('', false);
+    navGameStart.textContent = 'Detener';
+    navGameBoard.focus();
+
+    stopTimers();
+    state.timerId = window.setInterval(() => {
+      state.timeLeft -= 1;
+      updateHud();
+      if (state.timeLeft <= 0) finishGame();
+    }, 1000);
+    state.animationId = window.requestAnimationFrame(tick);
+  }
+
+  navGameStart.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (state.running) {
+      finishGame(true);
+      return;
+    }
+    startGame();
+  });
+
+  navGameBoard.addEventListener('pointermove', (event) => {
+    if (!state.running) return;
+    moveFromClientX(event.clientX);
+  });
+
+  navGameBoard.addEventListener('pointerdown', (event) => {
+    if (!state.running) return;
+    navGameBoard.setPointerCapture(event.pointerId);
+    moveFromClientX(event.clientX);
+  });
+
+  navGameBoard.addEventListener('keydown', (event) => {
+    if (!state.running) return;
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      setPlayerX(state.playerX - 0.08);
+    }
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      setPlayerX(state.playerX + 0.08);
+    }
+  });
+
+  window.addEventListener('navFishingCatClose', () => {
+    if (state.running) finishGame(true);
+  });
+
+  updateHud();
+  setPlayerX(0.5);
+}
+
 navItems.forEach((item) => {
   item.addEventListener('click', () => {
+    closeGameMenu();
     setActiveNavItem(item);
   });
 });
@@ -952,7 +1189,7 @@ function initDraggableNavSelector() {
 
   navCenter.addEventListener('pointerdown', (event) => {
     if (!event.isPrimary || event.button > 0) return;
-    if (navbar && (navbar.classList.contains('search-open') || navbar.classList.contains('settings-open'))) return;
+    if (navbar && (navbar.classList.contains('search-open') || navbar.classList.contains('settings-open') || navbar.classList.contains('game-menu-open'))) return;
 
     dragState.pointerId = event.pointerId;
     dragState.startX = event.clientX;
@@ -1049,6 +1286,17 @@ if (settingsToggle) {
   });
 }
 
+if (gameMenuToggle) {
+  gameMenuToggle.addEventListener('click', (event) => {
+    event.stopPropagation();
+    toggleGameMenu();
+  });
+}
+
+if (gameNavPlay) {
+  gameNavPlay.addEventListener('click', goToFishingCat);
+}
+
 themeOptions.forEach((button) => {
   button.addEventListener('click', () => {
     const preference = button.dataset.themeChoice || 'auto';
@@ -1077,16 +1325,21 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && navbar && navbar.classList.contains('settings-open')) {
     closeSettings();
   }
+  if (event.key === 'Escape' && navbar && navbar.classList.contains('game-menu-open')) {
+    closeGameMenu();
+  }
 });
 
 document.addEventListener('click', (event) => {
-  if (!navbar || !navbar.classList.contains('settings-open')) return;
+  if (!navbar) return;
   if (event.target instanceof Node && navbar.contains(event.target)) return;
-  closeSettings();
+  if (navbar.classList.contains('settings-open')) closeSettings();
+  if (navbar.classList.contains('game-menu-open')) closeGameMenu();
 });
 
 initContactForm();
 initProtectedEmailButtons();
 initProfileChips();
 initVerificationBadges();
+initNavFishingCat();
 initMiniGame();
