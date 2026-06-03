@@ -22,15 +22,33 @@
 <link rel="icon" href="favicon.png">
 <link rel="manifest" href="manifest.json">
 
+<script>
+(function(){
+try{
+var preference=localStorage.getItem('gatochente_theme_preference')||'auto';
+var dark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
+var theme=preference==='dark'||(preference==='auto'&&dark)?'dark':'light';
+document.documentElement.dataset.themePreference=preference;
+document.documentElement.dataset.theme=theme;
+}catch(e){}
+})();
+</script>
+
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="style.css?v=20260601g">
+<link rel="stylesheet" href="style.css?v=20260602c">
 
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
 </head>
 
 <body>
+
+<div class="page-loader" id="page-loader" role="status" aria-live="polite" aria-label="Cargando GATOCHENTE">
+<div class="page-loader-logo">
+<img src="logo.png" alt="GATOCHENTE">
+</div>
+</div>
 
 <nav class="navbar">
 
@@ -202,7 +220,7 @@ Siéntete libre de contactarme sobre consultoría, proyectos, colaboraciones o c
 
 </footer>
 
-<script src="script.js?v=20260601g"></script>
+<script src="script.js?v=20260602c"></script>
 
 </body>
 </html>

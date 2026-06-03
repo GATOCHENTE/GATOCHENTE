@@ -1,6 +1,20 @@
 const year = document.getElementById("year");
 if (year) year.textContent = "© " + new Date().getFullYear() + " GATOCHENTE";
 
+const pageLoader = document.getElementById("page-loader");
+
+function hidePageLoader() {
+  if (!pageLoader || pageLoader.classList.contains("is-hidden")) return;
+  window.setTimeout(() => {
+    pageLoader.classList.add("is-hidden");
+    window.setTimeout(() => {
+      pageLoader.remove();
+    }, 650);
+  }, 260);
+}
+
+window.setTimeout(hidePageLoader, 3200);
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     const currentScript = document.querySelector('script[src*="script.js"]');
@@ -1246,6 +1260,7 @@ function initDraggableNavSelector() {
 window.addEventListener('load', () => {
   updateActiveNav();
   refreshSelector();
+  hidePageLoader();
 });
 
 window.addEventListener('resize', refreshSelector);
