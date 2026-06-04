@@ -49,6 +49,7 @@ const searchToggle = document.getElementById('search-toggle');
 const searchOverlay = document.getElementById('nav-search-overlay');
 const searchClose = document.getElementById('search-close');
 const searchInput = document.getElementById('search-input');
+const searchHistoryStorageKey = 'gatochente_search_history';
 const settingsToggle = document.getElementById('settings-toggle');
 const settingsPanel = document.getElementById('settings-panel');
 const gameMenuToggle = document.getElementById('game-menu-toggle');
@@ -210,6 +211,347 @@ function clearHighlight() {
   });
 }
 
+const globalSearchIndex = [
+  {
+    title: 'Inicio',
+    eyebrow: 'Página',
+    description: 'Portada del portafolio de GATOCHENTE.',
+    url: '/',
+    keywords: ['home', 'inicio', 'portafolio', 'gatochente', 'vicente']
+  },
+  {
+    title: 'Habilidades en crecimiento',
+    eyebrow: 'Inicio',
+    description: 'HTML, CSS, JavaScript, Python, Arduino, Raspberry Pi, GitHub y Figma.',
+    url: '/#skills-title',
+    keywords: ['habilidades', 'skills', 'html', 'css', 'javascript', 'python', 'arduino', 'raspberry', 'github', 'figma']
+  },
+  {
+    title: 'CatSocial',
+    eyebrow: 'Proyecto actual',
+    description: 'Red social estilo X/Twitter con límites sanos, temas agradables y comunidad propia.',
+    url: '/#current-project-title',
+    keywords: ['catsocial', 'cat social', 'red social', 'twitter', 'x', 'temas', 'limites', 'verificacion', 'beta']
+  },
+  {
+    title: 'FishingCat',
+    eyebrow: 'Juego',
+    description: 'Mini juego del gatito pescador con puntos, peces y tiempo límite.',
+    url: '/#fishingcat',
+    keywords: ['fishingcat', 'juego', 'gatito', 'pescador', 'peces', 'fish']
+  },
+  {
+    title: 'Proyectos',
+    eyebrow: 'Página',
+    description: 'Archivo de proyectos ordenados desde 2023 hasta 2025.',
+    url: '/proyectos',
+    keywords: ['proyectos', 'trabajos', 'archivo', '2023', '2024', '2025', 'maquetas', 'prototipos']
+  },
+  {
+    title: 'Baño ecológico',
+    eyebrow: 'Proyecto 2023',
+    description: 'Maqueta con ahorro de agua, reciclaje de residuos, circuitos, bomba y pulsador.',
+    url: '/proyectos#bano-ecologico',
+    keywords: ['baño', 'bano', 'ecologico', 'agua', 'bomba', 'pulsador', 'circuitos', 'protoboard', '2023']
+  },
+  {
+    title: 'Innovador paso peatonal',
+    eyebrow: 'Proyecto 2024',
+    description: 'Prototipo con Arduino, semáforo inteligente, barreras automáticas, LEDs y servomotores.',
+    url: '/proyectos#paso-peatonal',
+    keywords: ['paso peatonal', 'peatonal', 'semaforo', 'semáforo', 'arduino', 'barreras', 'servomotores', 'leds', '2024']
+  },
+  {
+    title: 'Detecta y protege',
+    eyebrow: 'Proyecto 2025',
+    description: 'Sistema de alerta sísmica con sensores de vibración, Arduino y LEDs.',
+    url: '/proyectos#detecta-y-protege',
+    keywords: ['detecta', 'protege', 'sismo', 'sismica', 'sísmica', 'sensor', 'vibracion', 'vibración', 'arduino', 'leds', '2025']
+  },
+  {
+    title: 'Sobre mí',
+    eyebrow: 'Página',
+    description: 'Información sobre GATOCHENTE, intereses, tecnología y creatividad.',
+    url: '/sobre-mi',
+    keywords: ['sobre mi', 'sobre mí', 'perfil', 'vicente', 'gatochente', 'bio']
+  },
+  {
+    title: 'Contacto',
+    eyebrow: 'Página',
+    description: 'Formulario y redes para contactar a GATOCHENTE.',
+    url: '/contacto',
+    keywords: ['contacto', 'email', 'correo', 'github', 'youtube', 'mensaje']
+  }
+];
+
+let searchResultsPanel = null;
+let searchResultsList = null;
+let searchHistoryList = null;
+let searchEmptyState = null;
+let searchClearHistoryButton = null;
+let searchShowMoreButton = null;
+let currentSearchResults = [];
+let searchShowAllResults = false;
+const searchCollapsedResultLimit = 3;
+
+if (searchInput) {
+  searchInput.placeholder = 'Buscar en toda la página...';
+}
+
+function normalizeSearchText(value) {
+  return (value || '')
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function getSearchHaystack(item) {
+  return normalizeSearchText([
+    item.title,
+    item.eyebrow,
+    item.description,
+    ...(item.keywords || [])
+  ].join(' '));
+}
+
+function scoreSearchItem(item, query) {
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return 0;
+
+  const words = normalizedQuery.split(/\s+/).filter(Boolean);
+  const title = normalizeSearchText(item.title);
+  const haystack = getSearchHaystack(item);
+  let score = 0;
+
+  if (title === normalizedQuery) score += 120;
+  if (title.startsWith(normalizedQuery)) score += 72;
+  if (title.includes(normalizedQuery)) score += 48;
+  if (haystack.includes(normalizedQuery)) score += 32;
+
+  words.forEach((word) => {
+    if (title.includes(word)) score += 24;
+    if (haystack.includes(word)) score += 10;
+    (item.keywords || []).forEach((keyword) => {
+      const normalizedKeyword = normalizeSearchText(keyword);
+      if (normalizedKeyword === word) score += 16;
+      if (normalizedKeyword.includes(word)) score += 8;
+    });
+  });
+
+  return score;
+}
+
+function getSearchResults(query) {
+  return globalSearchIndex
+    .map((item) => ({ ...item, score: scoreSearchItem(item, query) }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title))
+    .slice(0, 12);
+}
+
+function getSearchHistory() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(searchHistoryStorageKey) || '[]');
+    return Array.isArray(parsed) ? parsed.filter((item) => typeof item === 'string').slice(0, 8) : [];
+  } catch {
+    return [];
+  }
+}
+
+function setSearchHistory(history) {
+  try {
+    localStorage.setItem(searchHistoryStorageKey, JSON.stringify(history.slice(0, 8)));
+  } catch { /* ignore */ }
+}
+
+function saveSearchHistory(query) {
+  const cleanQuery = query.trim();
+  if (!cleanQuery) return;
+  const normalizedQuery = normalizeSearchText(cleanQuery);
+  const nextHistory = [
+    cleanQuery,
+    ...getSearchHistory().filter((item) => normalizeSearchText(item) !== normalizedQuery)
+  ];
+  setSearchHistory(nextHistory);
+}
+
+function removeSearchHistoryItem(query) {
+  const normalizedQuery = normalizeSearchText(query);
+  setSearchHistory(getSearchHistory().filter((item) => normalizeSearchText(item) !== normalizedQuery));
+  renderSearchPanel(searchInput ? searchInput.value.trim() : '');
+}
+
+function clearSearchHistory() {
+  setSearchHistory([]);
+  renderSearchPanel(searchInput ? searchInput.value.trim() : '');
+}
+
+function ensureSearchPanel() {
+  if (!searchOverlay || searchResultsPanel) return;
+
+  searchResultsPanel = document.createElement('div');
+  searchResultsPanel.className = 'search-results-panel';
+  searchResultsPanel.innerHTML = `
+    <div class="search-results-block" data-search-results-block>
+      <div class="search-panel-header">
+        <span>Resultados</span>
+      </div>
+      <div class="search-results-list" id="search-results-list"></div>
+      <button type="button" class="search-show-more" id="search-show-more">Ver más...</button>
+    </div>
+    <div class="search-results-block" data-search-history-block>
+      <div class="search-panel-header">
+        <span>Recientes</span>
+        <button type="button" class="search-history-clear" id="search-history-clear">Borrar todo</button>
+      </div>
+      <div class="search-history-list" id="search-history-list"></div>
+    </div>
+    <div class="search-empty-state" id="search-empty-state">Escribe para buscar en Inicio, Proyectos, Sobre mí y Contacto.</div>
+  `;
+  searchOverlay.appendChild(searchResultsPanel);
+  searchResultsList = searchResultsPanel.querySelector('#search-results-list');
+  searchHistoryList = searchResultsPanel.querySelector('#search-history-list');
+  searchEmptyState = searchResultsPanel.querySelector('#search-empty-state');
+  searchClearHistoryButton = searchResultsPanel.querySelector('#search-history-clear');
+  searchShowMoreButton = searchResultsPanel.querySelector('#search-show-more');
+
+  if (searchClearHistoryButton) {
+    searchClearHistoryButton.addEventListener('click', clearSearchHistory);
+  }
+  if (searchShowMoreButton) {
+    searchShowMoreButton.addEventListener('click', () => {
+      searchShowAllResults = !searchShowAllResults;
+      renderSearchPanel(searchInput ? searchInput.value.trim() : '');
+    });
+  }
+}
+
+function buildResultButton(item) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'search-result-item';
+  button.innerHTML = `
+    <span class="search-result-eyebrow"></span>
+    <strong></strong>
+    <small></small>
+  `;
+  button.querySelector('.search-result-eyebrow').textContent = item.eyebrow;
+  button.querySelector('strong').textContent = item.title;
+  button.querySelector('small').textContent = item.description;
+  button.addEventListener('click', () => {
+    const query = searchInput ? searchInput.value.trim() : item.title;
+    saveSearchHistory(query || item.title);
+    navigateToSearchResult(item.url);
+  });
+  return button;
+}
+
+function buildHistoryItem(query) {
+  const row = document.createElement('div');
+  row.className = 'search-history-item';
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = query;
+  button.addEventListener('click', () => {
+    if (searchInput) {
+      searchInput.value = query;
+      searchInput.focus();
+    }
+    renderSearchPanel(query);
+    highlightText(query);
+  });
+
+  const removeButton = document.createElement('button');
+  removeButton.type = 'button';
+  removeButton.className = 'search-history-remove';
+  removeButton.setAttribute('aria-label', `Borrar búsqueda ${query}`);
+  removeButton.textContent = '×';
+  removeButton.addEventListener('click', () => removeSearchHistoryItem(query));
+
+  row.append(button, removeButton);
+  return row;
+}
+
+function renderSearchPanel(query = '') {
+  ensureSearchPanel();
+  if (!searchResultsPanel || !searchResultsList || !searchHistoryList || !searchEmptyState) return;
+
+  const cleanQuery = query.trim();
+  const history = getSearchHistory();
+  currentSearchResults = cleanQuery ? getSearchResults(cleanQuery) : [];
+  if (!cleanQuery) searchShowAllResults = false;
+
+  const visibleResults = searchShowAllResults
+    ? currentSearchResults
+    : currentSearchResults.slice(0, searchCollapsedResultLimit);
+  const hiddenResultsCount = Math.max(0, currentSearchResults.length - visibleResults.length);
+
+  searchResultsList.replaceChildren(...visibleResults.map(buildResultButton));
+  searchHistoryList.replaceChildren(...history.map(buildHistoryItem));
+
+  const resultsBlock = searchResultsPanel.querySelector('[data-search-results-block]');
+  const historyBlock = searchResultsPanel.querySelector('[data-search-history-block]');
+  const hasResults = currentSearchResults.length > 0;
+  const hasHistory = history.length > 0;
+
+  if (resultsBlock) resultsBlock.hidden = !cleanQuery || !hasResults;
+  if (resultsBlock) resultsBlock.style.gridColumn = hasHistory ? '' : '1 / -1';
+  if (historyBlock) {
+    historyBlock.hidden = !hasHistory;
+    historyBlock.style.gridColumn = cleanQuery && hasResults ? '' : '1 / -1';
+  }
+  if (searchClearHistoryButton) searchClearHistoryButton.hidden = !hasHistory;
+  if (searchShowMoreButton) {
+    searchShowMoreButton.hidden = currentSearchResults.length <= searchCollapsedResultLimit;
+    searchShowMoreButton.textContent = searchShowAllResults
+      ? 'Ver menos'
+      : `Ver más... (${Math.max(0, currentSearchResults.length - searchCollapsedResultLimit)})`;
+  }
+
+  if (searchResultsList) {
+    searchResultsList.classList.toggle('is-scrollable', searchShowAllResults && currentSearchResults.length > 5);
+  }
+
+  updateSearchNavbarHeight({
+    visibleResults: visibleResults.length,
+    historyCount: hasHistory ? Math.min(history.length, 4) : 0,
+    hasQuery: Boolean(cleanQuery),
+    showAll: searchShowAllResults
+  });
+
+  searchEmptyState.hidden = Boolean((cleanQuery && hasResults) || hasHistory);
+  if (cleanQuery && !hasResults) {
+    searchEmptyState.textContent = 'No encontré coincidencias claras. Prueba con proyectos, CatSocial, Arduino o contacto.';
+  } else {
+    searchEmptyState.textContent = 'Escribe para buscar en Inicio, Proyectos, Sobre mí y Contacto.';
+  }
+}
+
+function updateSearchNavbarHeight({ visibleResults = 0, historyCount = 0, hasQuery = false, showAll = false } = {}) {
+  if (!navbar) return;
+  const baseHeight = 232;
+  const isCompactViewport = window.innerWidth <= 800;
+  let targetHeight = baseHeight;
+
+  if (showAll) {
+    targetHeight = 520;
+  } else if (hasQuery && visibleResults > 0) {
+    targetHeight = isCompactViewport ? 430 : 318;
+  } else if (!hasQuery && historyCount > 2) {
+    targetHeight = isCompactViewport ? 360 : 300;
+  }
+
+  navbar.style.setProperty('--search-open-height', `${targetHeight}px`);
+}
+
+function navigateToSearchResult(url) {
+  closeSearch(false);
+  window.location.assign(url);
+}
+
 function highlightText(query) {
   clearHighlight();
   if (!query || query.trim() === '') return;
@@ -253,6 +595,8 @@ function openSearch() {
   if (!navbar || !searchInput || !searchOverlay) return;
   closeSettings();
   closeGameMenu();
+  ensureSearchPanel();
+  renderSearchPanel(searchInput.value.trim());
   navbar.classList.add('search-open');
   searchOverlay.setAttribute('aria-hidden', 'false');
   requestAnimationFrame(() => {
@@ -260,11 +604,14 @@ function openSearch() {
   });
 }
 
-function closeSearch() {
+function closeSearch(resetInput = true) {
   if (!navbar || !searchOverlay || !searchInput) return;
   navbar.classList.remove('search-open');
   searchOverlay.setAttribute('aria-hidden', 'true');
-  searchInput.value = '';
+  if (resetInput) {
+    searchInput.value = '';
+    renderSearchPanel('');
+  }
   clearHighlight();
 }
 
@@ -569,6 +916,152 @@ function initProtectedEmailButtons() {
   });
 }
 
+function initProjectCards() {
+  const projectCards = [...document.querySelectorAll('.projects .card[id]')];
+  if (!projectCards.length) return;
+
+  const modal = document.createElement('div');
+  modal.className = 'project-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'project-modal-title');
+  modal.setAttribute('aria-hidden', 'true');
+  modal.innerHTML = `
+    <div class="project-dialog">
+      <button type="button" class="project-close" aria-label="Cerrar proyecto">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6l12 12"></path>
+          <path d="M18 6l-12 12"></path>
+        </svg>
+      </button>
+      <div class="project-modal-media">
+        <img src="" alt="">
+      </div>
+      <div class="project-modal-content">
+        <p class="project-modal-kicker"></p>
+        <h2 id="project-modal-title"></h2>
+        <p class="project-modal-description"></p>
+        <div class="project-modal-notes"></div>
+        <div class="project-modal-tags"></div>
+        <div class="project-modal-collaborators"></div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const closeButton = modal.querySelector('.project-close');
+  const mediaImage = modal.querySelector('.project-modal-media img');
+  const kicker = modal.querySelector('.project-modal-kicker');
+  const title = modal.querySelector('#project-modal-title');
+  const description = modal.querySelector('.project-modal-description');
+  const notes = modal.querySelector('.project-modal-notes');
+  const tags = modal.querySelector('.project-modal-tags');
+  const collaborators = modal.querySelector('.project-modal-collaborators');
+
+  function getProjectData(card) {
+    const img = card.querySelector(':scope > img');
+    return {
+      id: card.id,
+      image: img ? img.getAttribute('src') : '',
+      imageAlt: img ? img.getAttribute('alt') : '',
+      kicker: card.querySelector('.card-kicker')?.textContent.trim() || '',
+      title: card.querySelector('h3')?.textContent.trim() || '',
+      description: card.querySelector(':scope > p:not(.card-kicker)')?.textContent.trim() || '',
+      notes: [...card.querySelectorAll('.project-notes p')].map((item) => item.textContent.trim()),
+      tags: [...card.querySelectorAll('.card-tags span')].map((item) => item.textContent.trim()),
+      collaborators: card.querySelector('.project-collaborators')?.cloneNode(true) || null
+    };
+  }
+
+  function openProject(card, updateHash = true) {
+    const data = getProjectData(card);
+    if (!data.title) return;
+
+    mediaImage.src = data.image;
+    mediaImage.alt = data.imageAlt || data.title;
+    kicker.textContent = data.kicker;
+    title.textContent = data.title;
+    description.textContent = data.description;
+
+    notes.replaceChildren(...data.notes.map((noteText) => {
+      const item = document.createElement('p');
+      item.textContent = noteText;
+      return item;
+    }));
+
+    tags.replaceChildren(...data.tags.map((tagText) => {
+      const item = document.createElement('span');
+      item.textContent = tagText;
+      return item;
+    }));
+
+    if (data.collaborators) {
+      data.collaborators.querySelectorAll('.user-chip').forEach((chip) => {
+        chip.setAttribute('role', 'button');
+        chip.setAttribute('tabindex', '0');
+        chip.setAttribute('aria-label', `Abrir perfil completo de ${chip.textContent.trim()}`);
+      });
+      collaborators.replaceChildren(data.collaborators);
+    } else {
+      collaborators.replaceChildren();
+    }
+
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+
+    if (updateHash && data.id) {
+      history.replaceState(null, '', `#${data.id}`);
+    }
+  }
+
+  function closeProject() {
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
+  }
+
+  projectCards.forEach((card) => {
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', `Ver proyecto ${card.querySelector('h3')?.textContent.trim() || ''}`);
+
+    card.addEventListener('click', (event) => {
+      if (event.target instanceof Element && event.target.closest('button,a,.user-chip')) return;
+      openProject(card);
+    });
+
+    card.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      openProject(card);
+    });
+  });
+
+  closeButton.addEventListener('click', closeProject);
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) closeProject();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && modal.classList.contains('is-open')) {
+      if (document.querySelector('.profile-modal.is-open, .verification-modal.is-open')) return;
+      closeProject();
+    }
+  });
+
+  function openProjectFromHash() {
+    const hash = window.location.hash.replace('#', '');
+    if (!hash) return;
+    const targetCard = projectCards.find((card) => card.id === hash);
+    if (targetCard) {
+      window.setTimeout(() => openProject(targetCard, false), 180);
+    }
+  }
+
+  openProjectFromHash();
+  window.addEventListener('hashchange', openProjectFromHash);
+}
+
 function initVerificationBadges() {
   const badges = document.querySelectorAll('.verification-badge');
   if (!badges.length) return;
@@ -631,12 +1124,13 @@ function initVerificationBadges() {
     modal.setAttribute('aria-hidden', 'true');
   }
 
-  badges.forEach((badge) => {
-    badge.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      openModal();
-    });
+  document.addEventListener('click', (event) => {
+    const badge = event.target instanceof Element ? event.target.closest('.verification-badge') : null;
+    if (!badge) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    openModal();
   });
 
   closeButton.addEventListener('click', closeModal);
@@ -732,22 +1226,30 @@ function initProfileChips() {
     modal.setAttribute('aria-hidden', 'true');
   }
 
-  chips.forEach((chip) => {
+  function prepareChip(chip) {
     chip.setAttribute('role', 'button');
     chip.setAttribute('tabindex', '0');
     chip.setAttribute('aria-label', 'Abrir perfil completo de GATOCHENTE');
+  }
 
-    chip.addEventListener('click', (event) => {
-      if (event.target instanceof Element && event.target.closest('.verification-badge')) return;
-      openProfileModal();
-    });
+  chips.forEach(prepareChip);
 
-    chip.addEventListener('keydown', (event) => {
-      if (event.target instanceof Element && event.target.closest('.verification-badge')) return;
-      if (event.key !== 'Enter' && event.key !== ' ') return;
-      event.preventDefault();
-      openProfileModal();
-    });
+  document.addEventListener('click', (event) => {
+    const chip = event.target instanceof Element ? event.target.closest('.user-chip[data-user="gatochente"]') : null;
+    if (!chip || (event.target instanceof Element && event.target.closest('.verification-badge'))) return;
+
+    prepareChip(chip);
+    openProfileModal();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    const chip = event.target instanceof Element ? event.target.closest('.user-chip[data-user="gatochente"]') : null;
+    if (!chip || (event.target instanceof Element && event.target.closest('.verification-badge'))) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+
+    event.preventDefault();
+    prepareChip(chip);
+    openProfileModal();
   });
 
   closeButton.addEventListener('click', closeProfileModal);
@@ -760,6 +1262,7 @@ function initProfileChips() {
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && modal.classList.contains('is-open')) {
+      if (document.querySelector('.verification-modal.is-open')) return;
       closeProfileModal();
     }
   });
@@ -1263,11 +1766,18 @@ window.addEventListener('load', () => {
   hidePageLoader();
 });
 
-window.addEventListener('resize', refreshSelector);
+window.addEventListener('resize', () => {
+  refreshSelector();
+  if (navbar && navbar.classList.contains('search-open')) {
+    renderSearchPanel(searchInput ? searchInput.value.trim() : '');
+  }
+});
 
 if (searchInput) {
   searchInput.addEventListener('input', () => {
     const value = searchInput.value.trim();
+    searchShowAllResults = false;
+    renderSearchPanel(value);
     if (!value) {
       clearHighlight();
       return;
@@ -1278,6 +1788,17 @@ if (searchInput) {
   searchInput.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       closeSearch();
+      return;
+    }
+    if (event.key === 'Enter') {
+      const value = searchInput.value.trim();
+      if (!value) return;
+      saveSearchHistory(value);
+      const firstResult = currentSearchResults[0] || getSearchResults(value)[0];
+      if (firstResult) {
+        event.preventDefault();
+        navigateToSearchResult(firstResult.url);
+      }
     }
   });
 }
@@ -1354,6 +1875,7 @@ document.addEventListener('click', (event) => {
 
 initContactForm();
 initProtectedEmailButtons();
+initProjectCards();
 initProfileChips();
 initVerificationBadges();
 initNavFishingCat();

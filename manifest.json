@@ -1,8 +1,8 @@
 {
 "name":"GATOCHENTE",
 "short_name":"GATOCHENTE",
-"start_url":"./index.html",
-"scope":"./",
+"start_url":"/",
+"scope":"/",
 "display":"standalone",
 "background_color":"#ffffff",
 "theme_color":"#ff8c42",

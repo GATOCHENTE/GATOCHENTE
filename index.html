@@ -4,6 +4,7 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://www.gatochente.com/">
 <meta name="description" content="Portafolio de GATOCHENTE: desarrollo web, proyectos con Arduino, Raspberry Pi, tecnología escolar y creatividad.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="GATOCHENTE">
@@ -11,16 +12,46 @@
 <meta property="og:description" content="Portafolio de tecnología, programación, Arduino, Raspberry Pi y creatividad.">
 <meta property="og:url" content="https://www.gatochente.com/">
 <meta property="og:image" content="https://www.gatochente.com/img/preview.jpg">
+<meta property="og:image:secure_url" content="https://www.gatochente.com/img/preview.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="670">
 <meta property="og:image:alt" content="Banner de vista previa de GATOCHENTE">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="GATOCHENTE">
 <meta name="twitter:description" content="Portafolio de tecnología, programación, Arduino, Raspberry Pi y creatividad.">
 <meta name="twitter:image" content="https://www.gatochente.com/img/preview.jpg">
+<meta name="twitter:image:alt" content="Banner de vista previa de GATOCHENTE">
+<meta name="twitter:url" content="https://www.gatochente.com/">
 
 <title>GATOCHENTE</title>
 
 <link rel="icon" href="favicon.png">
 <link rel="manifest" href="manifest.json">
+<link rel="image_src" href="https://www.gatochente.com/img/preview.jpg">
+<link rel="preload" as="image" href="img/preview.jpg" fetchpriority="high">
+
+<script type="application/ld+json">
+{
+"@context":"https://schema.org",
+"@type":"WebSite",
+"name":"GATOCHENTE",
+"url":"https://www.gatochente.com/",
+"image":"https://www.gatochente.com/img/preview.jpg",
+"thumbnailUrl":"https://www.gatochente.com/img/preview.jpg"
+}
+</script>
+
+<script>
+(function(){
+try{
+if(window.history&&window.location.pathname.endsWith('/index.html')){
+var cleanPath=window.location.pathname.replace(/index\.html$/,'');
+window.history.replaceState(null,'',cleanPath+window.location.search+window.location.hash);
+}
+}catch(e){}
+})();
+</script>
 
 <script>
 (function(){
@@ -36,7 +67,7 @@ document.documentElement.dataset.theme=theme;
 
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="style.css?v=20260602c">
+<link rel="stylesheet" href="style.css?v=20260604j">
 
 </head>
 
@@ -265,6 +296,66 @@ Aprendo combinando software, diseño y electrónica. Cada habilidad aparece porq
 
 </section>
 
+<section class="current-project-section" aria-labelledby="current-project-title">
+
+<div class="current-project-container">
+
+<div class="section-heading">
+<span>Ahora estoy trabajando en</span>
+<h2 id="current-project-title">CatSocial</h2>
+<p>
+Una red social creada por mí, inspirada en la rapidez de X/Twitter, pero pensada con límites más sanos, temas más agradables y una experiencia más cómoda para compartir ideas.
+</p>
+</div>
+
+<article class="current-project-card">
+<div class="current-project-visual" aria-hidden="true">
+<img src="img/catsocial.PNG" alt="">
+</div>
+
+<div class="current-project-content">
+<p class="project-year">En desarrollo</p>
+<h3>Una red social con más calma, estilo y control</h3>
+<p>
+CatSocial busca ser un espacio para publicar, conversar y descubrir contenido sin sentirse saturado. La idea es combinar interacción social, personalización visual y reglas claras para que usarla sea más agradable.
+</p>
+
+<div class="current-project-points" aria-label="Ideas principales de CatSocial">
+<span>Límites pensados</span>
+<span>Temas visuales</span>
+<span>Publicaciones rápidas</span>
+<span>Comunidad propia</span>
+</div>
+</div>
+</article>
+
+<div class="catsocial-roadmap" aria-label="Próximamente en CatSocial">
+<article>
+<span>01</span>
+<strong>Perfiles personalizables</strong>
+<p>Espacios con identidad propia para que cada usuario pueda mostrar su estilo.</p>
+</article>
+<article>
+<span>02</span>
+<strong>Temas agradables</strong>
+<p>Paletas visuales pensadas para navegar con comodidad en claro y oscuro.</p>
+</article>
+<article>
+<span>03</span>
+<strong>Límites sanos</strong>
+<p>Publicaciones y reglas diseñadas para conversar sin saturación ni ruido.</p>
+</article>
+<article>
+<span>04</span>
+<strong>Verificación propia</strong>
+<p>Insignias claras para reconocer perfiles reales y proyectos destacados.</p>
+</article>
+</div>
+
+</div>
+
+</section>
+
 <section class="mini-game-section" id="fishingcat" aria-labelledby="mini-game-title">
 
 <div class="mini-game-container">
@@ -380,7 +471,7 @@ Me gustan los proyectos que mezclan una idea útil con prototipos físicos, prog
 
 </footer>
 
-<script src="script.js?v=20260602c"></script>
+<script src="script.js?v=20260604j"></script>
 
 </body>
 </html>
