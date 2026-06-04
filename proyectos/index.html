@@ -36,7 +36,7 @@ document.documentElement.dataset.theme=theme;
 
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="../style.css?v=20260602c">
+<link rel="stylesheet" href="../style.css?v=20260604j">
 
 </head>
 
@@ -162,7 +162,20 @@ document.documentElement.dataset.theme=theme;
 
 <section class="projects">
 
-<div class="card">
+<div class="projects-heading">
+<span>Archivo de proyectos</span>
+<h1>Proyectos</h1>
+<p>
+El proyecto más reciente aparece destacado arriba. Debajo quedan los proyectos anteriores ordenados por año para mostrar cómo han ido creciendo mis ideas.
+</p>
+<div class="projects-order" aria-label="Orden de los proyectos">
+<span>2023</span>
+<span>2024</span>
+<span>2025</span>
+</div>
+</div>
+
+<div class="card" id="bano-ecologico">
 
 <img src="../img/proyecto1.jpg" alt="Maqueta de baño ecológico con sistema de ahorro de agua">
 
@@ -199,7 +212,7 @@ Utiliza Circuitos, Protoboard, Bomba de agua y Pulsador.
 
 </div>
 
-<div class="card">
+<div class="card" id="paso-peatonal">
 
 <img src="../img/proyecto2.jpg" alt="Maqueta de paso peatonal con semáforo inteligente y barreras automáticas">
 
@@ -236,7 +249,9 @@ Utiliza Arduino, Protoboard, LEDs y Servomotores.
 
 </div>
 
-<div class="card">
+<div class="card project-featured" id="detecta-y-protege">
+
+<span class="project-recent-label">Proyecto reciente</span>
 
 <img src="../img/proyecto3.jpg" alt="Maqueta de sistema de seguridad sísmica con sensores y luces LED">
 
@@ -280,7 +295,7 @@ Utiliza Arduino, Protoboard, Sensores de Vibración y LEDs.
 
 </footer>
 
-<script src="../script.js?v=20260602c"></script>
+<script src="../script.js?v=20260604j"></script>
 
 </body>
 </html>
