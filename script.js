@@ -1,6 +1,29 @@
 const year = document.getElementById("year");
 if (year) year.textContent = "© " + new Date().getFullYear() + " GATOCHENTE";
 
+if (year) year.textContent = "\u00A9 " + new Date().getFullYear() + " GATOCHENTE";
+
+function initExpandableFooter() {
+  const footers = document.querySelectorAll('.site-footer');
+  if (!footers.length) return;
+
+  footers.forEach((footer) => {
+    function toggleFooter() {
+      const isExpanded = footer.classList.toggle('is-expanded');
+      footer.setAttribute('aria-expanded', String(isExpanded));
+    }
+
+    footer.addEventListener('click', toggleFooter);
+    footer.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      toggleFooter();
+    });
+  });
+}
+
+initExpandableFooter();
+
 const pageLoader = document.getElementById("page-loader");
 
 function hidePageLoader() {
@@ -64,6 +87,10 @@ const navGameMessage = document.getElementById('nav-game-message');
 const themeOptions = [...document.querySelectorAll('.theme-option')];
 const themeMediaQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 const themeStorageKey = 'gatochente_theme_preference';
+const browserThemeColors = {
+  light: '#fff3e6',
+  dark: '#151a22'
+};
 
 function getStoredThemePreference() {
   try {
@@ -86,11 +113,26 @@ function updateThemeControls(preference) {
   });
 }
 
+function updateBrowserThemeColor(theme) {
+  const color = browserThemeColors[theme] || browserThemeColors.light;
+  let themeMeta = document.querySelector('meta[name="theme-color"]:not([media])');
+
+  if (!themeMeta) {
+    themeMeta = document.createElement('meta');
+    themeMeta.setAttribute('name', 'theme-color');
+    document.head.appendChild(themeMeta);
+  }
+
+  themeMeta.setAttribute('content', color);
+  document.documentElement.style.colorScheme = theme === 'dark' ? 'dark' : 'light';
+}
+
 function applyThemePreference(preference) {
   const safePreference = ['auto', 'light', 'dark'].includes(preference) ? preference : 'auto';
   const resolvedTheme = resolveTheme(safePreference);
   document.documentElement.dataset.themePreference = safePreference;
   document.documentElement.dataset.theme = resolvedTheme;
+  updateBrowserThemeColor(resolvedTheme);
   updateThemeControls(safePreference);
 }
 
