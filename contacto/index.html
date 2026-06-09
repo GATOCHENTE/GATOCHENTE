@@ -4,6 +4,9 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#fff3e6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151a22" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
 <meta name="description" content="Contacta a GATOCHENTE para proyectos, colaboraciones, tecnología, desarrollo web y consultas creativas.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="GATOCHENTE">
@@ -36,7 +39,7 @@ document.documentElement.dataset.theme=theme;
 
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="../style.css?v=20260604j">
+<link rel="stylesheet" href="../style.css?v=20260608f">
 
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
@@ -214,13 +217,19 @@ Siéntete libre de contactarme sobre consultoría, proyectos, colaboraciones o c
 
 </section>
 
-<footer>
-
-<p id="year"></p>
-
+<footer class="site-footer" tabindex="0" aria-expanded="false" aria-label="Ver informacion legal de GATOCHENTE">
+<div class="footer-reveal">
+<img src="../img/footer.png" alt="Logo de GATOCHENTE" class="footer-logo">
+<div class="footer-info">
+<strong>GATOCHENTE</strong>
+<p>Portafolio personal de tecnologia, programacion y proyectos creativos. El contenido, imagenes, ideas y textos pertenecen a GATOCHENTE salvo que se indique lo contrario.</p>
+<p class="footer-terms">Terminos de uso: puedes visitar, compartir y aprender desde esta pagina, pero no copiar el contenido completo, logos o proyectos como si fueran propios.</p>
+</div>
+</div>
+<p id="year" class="footer-copy"></p>
 </footer>
 
-<script src="../script.js?v=20260604j"></script>
+<script src="../script.js?v=20260608f"></script>
 
 </body>
 </html>
