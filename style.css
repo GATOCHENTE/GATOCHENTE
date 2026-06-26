@@ -5454,12 +5454,17 @@ pointer-events:none;
 
 /* CATPACK PAGE */
 
+.catpack-body{
+overflow-x:hidden;
+}
+
 .catpack-page{
 width:min(1160px,calc(100% - 32px));
 margin:0 auto;
 padding:132px 0 72px;
 position:relative;
 isolation:isolate;
+overflow:hidden;
 }
 
 .catpack-page::before,
@@ -6108,6 +6113,8 @@ linear-gradient(135deg,rgba(125,211,252,.16),rgba(255,155,85,.16));
 
 @media(max-width:560px){
 .catpack-page{width:min(100% - 20px,1120px);padding-top:116px;}
+.catpack-page::before{right:-42%;width:82vw;height:82vw;}
+.catpack-page::after{left:-42%;width:72vw;height:72vw;}
 .catpack-hero-copy,.catpack-product-card{border-radius:26px;padding:22px;}
 .catpack-features{grid-template-columns:1fr;}
 .catpack-actions{flex-direction:column;}
