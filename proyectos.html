@@ -39,7 +39,7 @@ document.documentElement.dataset.theme=theme;
 
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="style.css?v=20260608f">
+<link rel="stylesheet" href="style.css?v=20260625-projects-catpack">
 
 </head>
 
@@ -87,6 +87,15 @@ document.documentElement.dataset.theme=theme;
 <span>Proyectos</span>
 </a>
 
+
+<a href="/catpack" class="nav-item">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<path d="M4 7l8-4 8 4-8 4-8-4z"></path>
+<path d="M4 7v10l8 4 8-4V7"></path>
+<path d="M12 11v10"></path>
+</svg>
+<span>CatPack</span>
+</a>
 <a href="/contacto" class="nav-item">
 <svg class="nav-icon" viewBox="0 0 24 24">
 <path d="M4 6h16v12H4z"></path>
@@ -175,7 +184,47 @@ El proyecto más reciente aparece destacado arriba. Debajo quedan los proyectos 
 <span>2023</span>
 <span>2024</span>
 <span>2025</span>
+<span>2026</span>
 </div>
+</div>
+
+<div class="card project-featured" id="catpack">
+
+<span class="project-recent-label">Proyecto reciente</span>
+
+<img src="img/catpack-logo.png" alt="Logo de CatPack">
+
+<p class="card-kicker">Aplicación para Windows · 2026</p>
+<h3>CatPack</h3>
+
+<p>
+Archivador moderno creado por GATOCHENTE para comprimir, extraer, inspeccionar y verificar archivos .gcat en Windows.
+Utiliza compresión ZSTD, hashes SHA-256, metadata propia y un sistema de actualización desde GATOCHENTE.
+</p>
+
+<div class="project-notes">
+<p><strong>Objetivo:</strong> crear una herramienta propia para empaquetar archivos con una experiencia simple y moderna.</p>
+<p><strong>Aprendizaje:</strong> diseño de formato de archivo, verificación de integridad, instalador y flujo de actualización.</p>
+</div>
+
+<div class="card-tags">
+<span>Windows</span>
+<span>.gcat</span>
+<span>ZSTD</span>
+<span>SHA-256</span>
+</div>
+
+<div class="project-collaborators" aria-label="Colaboradores del proyecto">
+<span class="collaborators-label">Colaborador</span>
+<div class="user-chip" data-user="gatochente">
+<img class="user-avatar" src="img/gatochente.jpg" alt="Foto de perfil de GATOCHENTE">
+<span class="user-handle">@gatochente</span>
+<button type="button" class="verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver términos de la insignia">
+<img src="img/check.PNG" alt="Verificado">
+</button>
+</div>
+</div>
+
 </div>
 
 <div class="card" id="bano-ecologico">
@@ -252,9 +301,7 @@ Utiliza Arduino, Protoboard, LEDs y Servomotores.
 
 </div>
 
-<div class="card project-featured" id="detecta-y-protege">
-
-<span class="project-recent-label">Proyecto reciente</span>
+<div class="card" id="detecta-y-protege">
 
 <img src="img/proyecto3.jpg" alt="Maqueta de sistema de seguridad sísmica con sensores y luces LED">
 
@@ -308,3 +355,4 @@ Utiliza Arduino, Protoboard, Sensores de Vibración y LEDs.
 
 </body>
 </html>
+

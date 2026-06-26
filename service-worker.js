@@ -1,4 +1,4 @@
-const CACHE_VERSION = "gatochente-v66";
+const CACHE_VERSION = "gatochente-v72";
 const APP_SHELL_FILES = [
 	"./",
 	"./index.html",
@@ -8,9 +8,11 @@ const APP_SHELL_FILES = [
 	"./sobre-mi/",
 	"./proyectos/",
 	"./contacto/",
+	"./catpack/",
 	"./sobre-mi/index.html",
 	"./proyectos/index.html",
 	"./contacto/index.html",
+	"./catpack/index.html",
 	"./style.css",
 	"./script.js",
 	"./manifest.json",
@@ -18,6 +20,7 @@ const APP_SHELL_FILES = [
 	"./logo.png",
 	"./img/header.jpg",
 	"./img/check.PNG",
+	"./img/catpack-logo.png",
 	"./img/catsocial.PNG",
 	"./img/footer.png",
 	"./img/gatochente.jpg",
@@ -81,3 +84,6 @@ self.addEventListener("fetch", (event) => {
 			)
 	);
 });
+
+
+
