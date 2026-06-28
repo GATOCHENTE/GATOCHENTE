@@ -6100,6 +6100,14 @@ font-size:14px;
 white-space:nowrap;
 }
 
+.catpack-legacy-actions{
+display:flex;
+flex:0 0 auto;
+flex-wrap:wrap;
+justify-content:flex-end;
+gap:10px;
+}
+
 html[data-theme="dark"] .catpack-kicker{
 background:rgba(255,255,255,.12);
 color:#7dd3fc;
@@ -6198,6 +6206,7 @@ linear-gradient(135deg,rgba(125,211,252,.16),rgba(255,155,85,.16));
 .catpack-release-action{align-items:flex-start;max-width:none;}
 .catpack-system-note{text-align:left;}
 .catpack-legacy{align-items:flex-start;flex-direction:column;}
+.catpack-legacy-actions{justify-content:flex-start;}
 .catpack-product-card:hover{transform:translateY(-6px);}
 }
 
@@ -6213,5 +6222,6 @@ linear-gradient(135deg,rgba(125,211,252,.16),rgba(255,155,85,.16));
 .catpack-hero-chips span{flex:1 1 calc(50% - 10px);}
 .catpack-availability{width:100%;}
 .catpack-legacy{padding:18px;}
+.catpack-legacy-actions{width:100%;}
 .catpack-secondary.compact{width:100%;white-space:normal;}
 }
