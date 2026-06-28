@@ -33,7 +33,7 @@ document.documentElement.dataset.theme=theme;
 })();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../style.css?v=20260625-catpack-system">
+<link rel="stylesheet" href="../style.css?v=20260627-catpack-bg2">
 </head>
 <body class="catpack-body">
 <div class="page-loader" id="page-loader" role="status" aria-live="polite" aria-label="Cargando GATOCHENTE">
@@ -164,6 +164,10 @@ document.documentElement.dataset.theme=theme;
 <section class="catpack-hero" aria-labelledby="catpack-title">
 <div class="catpack-hero-copy">
 <p class="catpack-kicker">GATOCHENTE Archive</p>
+<div class="catpack-new-version" aria-label="Nueva versión disponible">
+<span>Nueva</span>
+CatPack 2 Beta
+</div>
 <h1 id="catpack-title">CatPack</h1>
 <p class="catpack-lead">Un archivador moderno para Windows, creado para comprimir, extraer, inspeccionar y verificar archivos <strong>.gcat</strong> con una experiencia limpia y rápida.</p>
 <div class="catpack-hero-chips" aria-label="Características principales">
@@ -185,8 +189,8 @@ document.documentElement.dataset.theme=theme;
 </div>
 </div>
 <div class="catpack-actions">
-<a class="catpack-download" href="/catpack/CatPack-Setup-0.1.0.exe" download>Descargar CatPack 0.1.0 Beta</a>
-<a class="catpack-secondary" href="/proyectos">Ver más proyectos</a>
+<a class="catpack-download" href="/catpack/CatPack-Setup-0.2.0.exe" download="CatPack-Setup-0.2.0.exe">Descargar CatPack 2 Beta</a>
+<a class="catpack-secondary" href="#version-anterior">Ver versión anterior</a>
 </div>
 <p class="catpack-note">Windows puede mostrar una advertencia de publicador desconocido porque esta beta todavía no está firmada digitalmente.</p>
 </div>
@@ -210,14 +214,22 @@ document.documentElement.dataset.theme=theme;
 </section>
 <section class="catpack-release">
 <div>
-<span>Beta pública</span>
-<h2>Lista para probar</h2>
-<p>El instalador incluye la app, el CLI, los iconos, accesos directos, asociación de archivos .gcat y desinstalador.</p>
+<span class="catpack-release-label">Versión más reciente</span>
+<h2>CatPack 2 Beta</h2>
+<p>La nueva beta es la versión recomendada. El instalador incluye la app, el CLI, los iconos, accesos directos, asociación de archivos .gcat y desinstalador.</p>
 </div>
 <div class="catpack-release-action">
-<a class="catpack-download compact" href="/catpack/CatPack-Setup-0.1.0.exe" download>Descargar instalador</a>
+<a class="catpack-download compact" href="/catpack/CatPack-Setup-0.2.0.exe" download="CatPack-Setup-0.2.0.exe">Descargar versión 2 Beta</a>
 <p class="catpack-system-note">Requiere Windows 10 o superior para un mejor funcionamiento.</p>
 </div>
+</section>
+<section class="catpack-legacy" id="version-anterior" aria-labelledby="catpack-legacy-title">
+<div>
+<span>Versión alternativa</span>
+<h2 id="catpack-legacy-title">CatPack 1 Beta</h2>
+<p>La primera beta pública sigue disponible para quienes prefieran continuar usando la versión anterior.</p>
+</div>
+<a class="catpack-secondary compact" href="/catpack/CatPack-Setup-0.1.0.exe" download="CatPack-Setup-0.1.0.exe">Descargar versión 1 Beta</a>
 </section>
 </main>
 <footer class="site-footer" tabindex="0" aria-expanded="false" aria-label="Ver informacion legal de GATOCHENTE">
@@ -231,6 +243,6 @@ document.documentElement.dataset.theme=theme;
 </div>
 <p id="year" class="footer-copy"></p>
 </footer>
-<script src="../script.js?v=20260625-catpack"></script>
+<script src="../script.js?v=20260627-catpack-v2"></script>
 </body>
 </html>

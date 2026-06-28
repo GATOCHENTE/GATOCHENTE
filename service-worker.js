@@ -1,4 +1,4 @@
-const CACHE_VERSION = "gatochente-v72";
+const CACHE_VERSION = "gatochente-v76";
 const APP_SHELL_FILES = [
 	"./",
 	"./index.html",
@@ -65,6 +65,37 @@ self.addEventListener("fetch", (event) => {
 
 	const requestUrl = new URL(event.request.url);
 	if (requestUrl.origin !== self.location.origin) return;
+
+	if (/\.exe$/i.test(requestUrl.pathname)) {
+		const installerName = requestUrl.pathname.split("/").pop();
+
+		event.respondWith(
+			fetch(event.request, { cache: "no-store" })
+				.then((networkResponse) => {
+					const contentType = networkResponse.headers.get("content-type") || "";
+
+					if (!networkResponse.ok || contentType.includes("text/html")) {
+						return new Response("El instalador no está disponible.", {
+							status: 502,
+							headers: { "Content-Type": "text/plain; charset=utf-8" }
+						});
+					}
+
+					const headers = new Headers(networkResponse.headers);
+					headers.set("Content-Type", "application/octet-stream");
+					headers.set("Content-Disposition", `attachment; filename="${installerName}"`);
+
+					return new Response(networkResponse.body, {
+						status: networkResponse.status,
+						statusText: networkResponse.statusText,
+						headers
+					});
+				})
+				.catch(() => new Response("", { status: 503, statusText: "Service Unavailable" }))
+		);
+
+		return;
+	}
 
 	event.respondWith(
 		fetch(event.request)
