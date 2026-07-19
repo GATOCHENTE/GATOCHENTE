@@ -161,6 +161,160 @@ function normalizePath(pathname) {
   return normalized || '/';
 }
 
+const routePages = {
+  '/': 'Inicio',
+  '/sobre-mi': 'Sobre',
+  '/proyectos': 'Proyectos',
+  '/catpack': 'CatPack',
+  '/contacto': 'Contacto'
+};
+
+const routeHashLabels = {
+  fishingcat: 'FishingCat',
+  catpack: 'CatPack',
+  'bano-ecologico': 'Bano Ecologico',
+  'paso-peatonal': 'Paso Peatonal',
+  'detecta-y-protege': 'Detecta y Protege',
+  'version-anterior': 'Versiones Anteriores'
+};
+
+let observedRouteHash = '';
+let routeScrollFrame = null;
+
+function titleCaseRoutePart(value) {
+  return value
+    .replace(/^#/, '')
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function getHashRouteLabel(hash) {
+  const id = hash.replace(/^#/, '');
+  if (!id) return '';
+
+  const target = document.getElementById(id);
+  if (target) {
+    const heading = target.matches('h1,h2,h3') ? target : target.querySelector('[data-route-title],h1,h2,h3');
+    if (heading && heading.textContent.trim()) return heading.textContent.trim();
+  }
+
+  if (routeHashLabels[id]) return routeHashLabels[id];
+  return titleCaseRoutePart(id);
+}
+
+function createRouteCrumb({ href, label, isHome = false, isCurrent = false }) {
+  const link = document.createElement('a');
+  link.href = href;
+  if (isCurrent) link.setAttribute('aria-current', 'page');
+
+  const span = document.createElement('span');
+  span.className = isHome ? 'route-tab-glyph' : 'route-tab-label';
+  span.textContent = isHome ? '\uE000' : label;
+  link.appendChild(span);
+
+  if (isHome) link.setAttribute('aria-label', 'Inicio');
+  return link;
+}
+
+function renderRouteTab() {
+  if (!navbar) return;
+
+  let routeTab = document.querySelector('.route-tab');
+  if (!routeTab) {
+    routeTab = document.createElement('nav');
+    routeTab.className = 'route-tab';
+    routeTab.setAttribute('aria-label', 'Ruta de navegacion');
+    navbar.insertAdjacentElement('beforebegin', routeTab);
+  }
+
+  const currentPath = getCurrentPage();
+  const currentHash = window.location.hash || observedRouteHash;
+  const crumbs = [
+    {
+      href: '/',
+      label: 'Inicio',
+      isHome: true,
+      isCurrent: currentPath === '/' && !currentHash
+    }
+  ];
+
+  if (currentPath !== '/') {
+    crumbs.push({
+      href: currentPath,
+      label: routePages[currentPath] || titleCaseRoutePart(currentPath),
+      isCurrent: !currentHash
+    });
+  }
+
+  if (currentHash) {
+    crumbs.push({
+      href: `${currentPath}${currentHash}`,
+      label: getHashRouteLabel(currentHash),
+      isCurrent: true
+    });
+  }
+
+  const shouldShowRouteTab = crumbs.length >= 2;
+  routeTab.classList.toggle('is-hidden', !shouldShowRouteTab);
+  navbar.classList.toggle('route-tab-open', shouldShowRouteTab);
+  routeTab.replaceChildren();
+  if (!shouldShowRouteTab) return;
+
+  crumbs.forEach((crumb, index) => {
+    if (index > 0) {
+      const separator = document.createElement('span');
+      separator.className = 'route-tab-separator';
+      separator.setAttribute('aria-hidden', 'true');
+      routeTab.appendChild(separator);
+    }
+    routeTab.appendChild(createRouteCrumb(crumb));
+  });
+}
+
+function getVisibleRouteHash() {
+  const routeIds = Object.keys(routeHashLabels);
+  const markerY = Math.min(window.innerHeight * 0.34, 220);
+  let closest = null;
+
+  routeIds.forEach((id) => {
+    const target = document.getElementById(id);
+    if (!target) return;
+
+    const rect = target.getBoundingClientRect();
+    if (rect.bottom < 96 || rect.top > window.innerHeight * 0.72) return;
+
+    const distance = Math.abs(rect.top - markerY);
+    if (!closest || distance < closest.distance) {
+      closest = { id, distance };
+    }
+  });
+
+  return closest ? `#${closest.id}` : '';
+}
+
+function updateObservedRoute() {
+  if (window.location.hash) {
+    observedRouteHash = '';
+    renderRouteTab();
+    return;
+  }
+
+  const nextHash = getVisibleRouteHash();
+  if (nextHash === observedRouteHash) return;
+  observedRouteHash = nextHash;
+  renderRouteTab();
+}
+
+function scheduleObservedRouteUpdate() {
+  if (routeScrollFrame) return;
+  routeScrollFrame = window.requestAnimationFrame(() => {
+    routeScrollFrame = null;
+    updateObservedRoute();
+  });
+}
+
 function updateActiveNav() {
   const current = getCurrentPage();
   navItems.forEach((item) => {
@@ -290,6 +444,13 @@ const globalSearchIndex = [
     keywords: ['proyectos', 'trabajos', 'archivo', '2023', '2024', '2025', 'maquetas', 'prototipos']
   },
   {
+    title: 'CatPack',
+    eyebrow: 'Aplicacion',
+    description: 'Archivador moderno para comprimir, extraer, inspeccionar y verificar archivos .gcat en Windows.',
+    url: '/catpack',
+    keywords: ['catpack', 'cat pack', 'gcat', '.gcat', 'windows', 'archivador', 'compresor', 'zstd', 'sha-256', 'instalador']
+  },
+  {
     title: 'Baño ecológico',
     eyebrow: 'Proyecto 2023',
     description: 'Maqueta con ahorro de agua, reciclaje de residuos, circuitos, bomba y pulsador.',
@@ -335,6 +496,7 @@ let searchShowMoreButton = null;
 let currentSearchResults = [];
 let searchShowAllResults = false;
 const searchCollapsedResultLimit = 3;
+const homeGlyphSearchToken = '\uE000';
 
 if (searchInput) {
   searchInput.placeholder = 'Buscar en toda la página...';
@@ -343,6 +505,7 @@ if (searchInput) {
 function normalizeSearchText(value) {
   return (value || '')
     .toString()
+    .replaceAll(homeGlyphSearchToken, ' inicio ')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
@@ -604,6 +767,7 @@ function highlightText(query) {
     const node = walker.currentNode;
     if (node.parentNode && ['SCRIPT', 'STYLE', 'TEXTAREA'].includes(node.parentNode.nodeName)) continue;
     if (node.parentElement && node.parentElement.closest('.navbar')) continue;
+    if (node.parentElement && node.parentElement.closest('.route-tab')) continue;
     if (node.textContent.toLowerCase().includes(lower)) {
       textNodes.push(node);
     }
@@ -1804,11 +1968,21 @@ function initDraggableNavSelector() {
 
 window.addEventListener('load', () => {
   updateActiveNav();
+  renderRouteTab();
+  updateObservedRoute();
   refreshSelector();
   hidePageLoader();
 });
 
+window.addEventListener('hashchange', () => {
+  observedRouteHash = '';
+  renderRouteTab();
+});
+
+window.addEventListener('scroll', scheduleObservedRouteUpdate, { passive: true });
+
 window.addEventListener('resize', () => {
+  scheduleObservedRouteUpdate();
   refreshSelector();
   if (navbar && navbar.classList.contains('search-open')) {
     renderSearchPanel(searchInput ? searchInput.value.trim() : '');
