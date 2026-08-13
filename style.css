@@ -5385,7 +5385,7 @@ white-space:pre;
 text-align:left;
 color:rgba(31,122,140,0.92);
 text-shadow:0 0 9px rgba(31,122,140,0.12);
-transform:translateX(-5.8ch);
+transform:translateX(-5.3ch);
 transform-origin:center;
 
 }
@@ -6423,7 +6423,7 @@ footer:focus-visible .footer-reveal,
 footer.is-expanded .footer-reveal{max-height:min(720px,calc(100vh - 110px));margin-bottom:12px;overflow-y:auto;}
 .footer-logo{width:min(240px,100%);height:160px;}
 .footer-ascii-scroll{width:100%;max-width:100%;padding:8px;aspect-ratio:1.58 / 1;}
-.footer-ascii-scroll pre{font-size:clamp(6px,2.5vw,8.8px);line-height:1;transform:translateX(-4.2ch);}
+.footer-ascii-scroll pre{font-size:clamp(6px,2.5vw,8.8px);line-height:1;transform:translateX(-3.7ch);}
 .footer-info p{font-size:12px;}
 .footer-copy{font-size:13px;}
 
