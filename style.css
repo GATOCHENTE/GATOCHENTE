@@ -82,6 +82,18 @@ linear-gradient(290deg,rgba(255,255,255,0.12),transparent 42%);
 z-index:-1;
 }
 
+.speed-dial-preview-image{
+position:absolute;
+top:0;
+left:0;
+width:320px;
+height:168px;
+opacity:.001;
+pointer-events:none;
+z-index:-1;
+object-fit:cover;
+}
+
 /* PAGE LOADER */
 
 .page-loader{
