@@ -2222,7 +2222,7 @@ function initAsciiNegativeHero() {
     const logoHeight = logoPattern.length;
     const scale = Math.max(1, Math.floor(Math.min(cols * 0.68 / logoWidth, rows * 0.58 / logoHeight)));
     const logoHorizontalOffset = Math.max(0, Math.round(cols * 0.012));
-    const startCol = Math.floor((cols - logoWidth * scale) / 2) + logoHorizontalOffset;
+    const startCol = Math.floor((cols - logoWidth * scale) / 2) + logoHorizontalOffset - 1;
     const logoCenterRow = rows * 0.4;
     const startRow = Math.floor(logoCenterRow - (logoHeight * scale) / 2);
 
