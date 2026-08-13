@@ -1,0 +1,250 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#fff3e6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151a22" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Contacta a GATOCHENTE para proyectos, colaboraciones, tecnología, desarrollo web y consultas creativas.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GATOCHENTE">
+<meta property="og:title" content="Contacto - GATOCHENTE">
+<meta property="og:description" content="Contacta a GATOCHENTE para proyectos, colaboraciones, tecnología y desarrollo web.">
+<meta property="og:url" content="https://www.gatochente.com/contacto/">
+<meta property="og:image" content="https://www.gatochente.com/img/preview.jpg">
+<meta property="og:image:alt" content="Banner de vista previa de GATOCHENTE">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Contacto - GATOCHENTE">
+<meta name="twitter:description" content="Contacta a GATOCHENTE para proyectos, colaboraciones, tecnología y desarrollo web.">
+<meta name="twitter:image" content="https://www.gatochente.com/img/preview.jpg">
+
+<title>Contacto - GATOCHENTE</title>
+
+<link rel="icon" href="../favicon.png">
+<link rel="manifest" href="../manifest.json">
+
+<script>
+(function(){
+try{
+var preference=localStorage.getItem('gatochente_theme_preference')||'auto';
+var dark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
+var theme=preference==='dark'||(preference==='auto'&&dark)?'dark':'light';
+document.documentElement.dataset.themePreference=preference;
+document.documentElement.dataset.theme=theme;
+}catch(e){}
+})();
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../style.css?v=20260812-paypal-icon-mark-fix">
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+</head>
+
+<body>
+
+<div class="page-loader" id="page-loader" role="status" aria-live="polite" aria-label="Cargando GATOCHENTE">
+<div class="page-loader-logo">
+<img src="../logo.png" alt="GATOCHENTE">
+</div>
+</div>
+
+<nav class="navbar">
+
+<div class="nav-left">
+<button type="button" class="logo-button" id="game-menu-toggle" aria-label="Abrir FishingCat" aria-expanded="false" aria-controls="game-nav-panel">
+<img src="../logo.png?v=20260812-navbar-logo" alt="" class="nav-logo-image" aria-hidden="true">
+<span class="sr-only">GATOCHENTE</span>
+</button>
+</div>
+<div class="nav-center">
+
+<div class="pill-selector"></div>
+
+<a href="/" class="nav-item">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<path d="M3 11l9-7 9 7"></path>
+<path d="M5 10v10h14V10"></path>
+</svg>
+<span>Inicio</span>
+</a>
+
+<a href="/sobre-mi" class="nav-item">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<circle cx="12" cy="8" r="4"></circle>
+<path d="M4 20c2-4 14-4 16 0"></path>
+</svg>
+<span>Sobre</span>
+</a>
+
+<a href="/proyectos" class="nav-item">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<rect x="3" y="4" width="18" height="14" rx="2"></rect>
+<path d="M3 10h18"></path>
+</svg>
+<span>Proyectos</span>
+</a>
+
+
+<a href="/catpack" class="nav-item">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<path d="M4 7l8-4 8 4-8 4-8-4z"></path>
+<path d="M4 7v10l8 4 8-4V7"></path>
+<path d="M12 11v10"></path>
+</svg>
+<span>CatPack</span>
+</a>
+<a href="/contacto" class="nav-item active">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<path d="M4 6h16v12H4z"></path>
+<path d="M4 6l8 7 8-7"></path>
+</svg>
+<span>Contacto</span>
+</a>
+
+</div>
+
+</div>
+
+<div class="game-nav-panel" id="game-nav-panel" aria-hidden="true">
+<div class="tool-panel-banner" aria-hidden="true"><img src="../img/banner.jpg" alt=""></div>
+<div class="nav-search-overlay" id="nav-search-overlay" aria-hidden="true">
+<input type="text" id="search-input" placeholder="Buscar en la página...">
+<button type="button" class="search-clear" id="search-clear" aria-label="Limpiar busqueda" hidden>×</button>
+</div>
+
+<div class="settings-panel" id="settings-panel" aria-hidden="true">
+<p>Apariencia</p>
+<div class="theme-options" role="group" aria-label="Selector de tema">
+<button type="button" class="theme-option" data-theme-choice="auto">Auto</button>
+<button type="button" class="theme-option" data-theme-choice="light">Claro</button>
+<button type="button" class="theme-option" data-theme-choice="dark">Oscuro</button>
+</div>
+</div>
+<div class="game-nav-header">
+<div class="game-nav-copy">
+<span>Jugando ahora</span>
+<strong>FishingCat</strong>
+<small>(Gatito Pescador)</small>
+</div>
+<button type="button" class="game-nav-play" id="game-nav-play">Ver juego completo</button>
+</div>
+<div class="nav-fishingcat" aria-label="FishingCat en la navbar">
+<div class="nav-game-hud" aria-live="polite">
+<span>Puntos <strong id="nav-game-score">0</strong></span>
+<span>Tiempo <strong id="nav-game-time">15</strong></span>
+<button type="button" class="nav-game-start" id="nav-game-start">Jugar</button>
+</div>
+<div class="nav-game-board" id="nav-game-board" tabindex="0" aria-label="Mini FishingCat en la navbar">
+<div class="nav-game-message" id="nav-game-message">Pulsa jugar</div>
+<div class="player cat-player nav-cat-player" id="nav-game-player" aria-hidden="true">
+<span class="cat-ear cat-ear-left"></span>
+<span class="cat-ear cat-ear-right"></span>
+<span class="cat-face">=^.^=</span>
+</div>
+</div>
+</div>
+</div>
+
+</nav>
+
+<section class="contact-section">
+
+<div class="contact-container">
+
+<h1>Contacto</h1>
+
+<p>¿Tienes una propuesta, pregunta o simplemente quieres conversar? ¡Me encantaría escucharte!</p>
+
+<p style="font-size: 14px; color: #999; margin-bottom: 30px;">
+Siéntete libre de contactarme sobre consultoría, proyectos, colaboraciones o cualquier cosa en la que crea que pueda ayudarte.
+</p>
+
+<form class="contact-form" data-access-key="dac837ac-3965-4fda-b598-a18e49540f25" data-provider="web3forms" novalidate>
+
+<input type="hidden" name="startedAt" value="">
+<input type="text" name="website" class="spam-trap" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+<input type="text" id="contact-name" name="name" placeholder="Tu nombre" autocomplete="name" required>
+
+<input type="email" id="contact-email" name="email" placeholder="Tu email" autocomplete="email" required>
+
+<input type="text" id="contact-subject" name="subject" placeholder="Asunto" required>
+
+<textarea id="contact-message" name="message" placeholder="Tu mensaje..." rows="6" required></textarea>
+
+<p class="form-status" aria-live="polite"></p>
+
+<div class="cf-turnstile" data-sitekey="0x4AAAAAACs8QMyEKLkO1kgt" data-theme="auto" data-language="es"></div>
+
+<button type="submit" class="hero-button">Enviar mensaje</button>
+
+</form>
+
+<div class="contact-info">
+<p><strong>También puedes encontrarme en:</strong></p>
+<div class="social-buttons">
+<a href="https://github.com/GATOCHENTE" target="_blank" rel="noopener noreferrer" class="social-btn github-btn">
+<span>GitHub</span>
+</a>
+<a href="https://www.youtube.com/@chentereyescastillo" target="_blank" rel="noopener noreferrer" class="social-btn youtube-btn">
+<span>YouTube</span>
+</a>
+<a href="#" class="social-btn email-btn email-protected" data-user="contacto" data-domain="gatochente.com" data-cooldown="12000">
+<span>Email</span>
+</a>
+</div>
+</div>
+
+</div>
+
+</section>
+
+<footer class="site-footer" tabindex="0" aria-expanded="false" aria-label="Ver informacion legal de GATOCHENTE">
+<div class="footer-reveal">
+<img src="../img/footer.png" alt="Logo de GATOCHENTE" class="footer-logo">
+<div class="footer-info">
+<strong>GATOCHENTE</strong>
+<p>Portafolio personal de tecnologia, programacion y proyectos creativos. El contenido, imagenes, ideas y textos pertenecen a GATOCHENTE salvo que se indique lo contrario.</p>
+<p class="footer-terms">Terminos de uso: puedes visitar, compartir y aprender desde esta pagina, pero no copiar el contenido completo, logos o proyectos como si fueran propios.</p>
+</div>
+</div>
+<p id="year" class="footer-copy"></p>
+</footer>
+
+<script src="../script.js?v=20260812-paypal-icon-mark-fix"></script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

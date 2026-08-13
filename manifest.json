@@ -1,0 +1,17 @@
+{
+"name":"GATOCHENTE",
+"short_name":"GATOCHENTE",
+"start_url":"/",
+"scope":"/",
+"display":"standalone",
+"background_color":"#fff3e6",
+"theme_color":"#fff3e6",
+"icons":[
+{
+"src":"favicon.png",
+"sizes":"1024x1024",
+"type":"image/png",
+"purpose":"any maskable"
+}
+]
+}

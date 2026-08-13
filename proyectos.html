@@ -1,0 +1,363 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#fff3e6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151a22" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Proyectos de GATOCHENTE: maquetas escolares, Arduino, electrónica, sensores, prototipos y soluciones creativas.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GATOCHENTE">
+<meta property="og:title" content="Proyectos - GATOCHENTE">
+<meta property="og:description" content="Maquetas escolares, Arduino, sensores, prototipos y soluciones creativas de GATOCHENTE.">
+<meta property="og:url" content="https://www.gatochente.com/proyectos/">
+<meta property="og:image" content="https://www.gatochente.com/img/preview.jpg">
+<meta property="og:image:alt" content="Banner de vista previa de GATOCHENTE">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Proyectos - GATOCHENTE">
+<meta name="twitter:description" content="Maquetas escolares, Arduino, sensores, prototipos y soluciones creativas de GATOCHENTE.">
+<meta name="twitter:image" content="https://www.gatochente.com/img/preview.jpg">
+
+<title>Proyectos - GATOCHENTE</title>
+
+<link rel="icon" href="favicon.png">
+<link rel="manifest" href="manifest.json">
+
+<script>
+(function(){
+try{
+var preference=localStorage.getItem('gatochente_theme_preference')||'auto';
+var dark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
+var theme=preference==='dark'||(preference==='auto'&&dark)?'dark':'light';
+document.documentElement.dataset.themePreference=preference;
+document.documentElement.dataset.theme=theme;
+}catch(e){}
+})();
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css?v=20260812-paypal-icon-mark-fix">
+
+</head>
+
+<body>
+
+<div class="page-loader" id="page-loader" role="status" aria-live="polite" aria-label="Cargando GATOCHENTE">
+<div class="page-loader-logo">
+<img src="logo.png" alt="GATOCHENTE">
+</div>
+</div>
+
+<nav class="navbar">
+
+<div class="nav-left">
+<button type="button" class="logo-button" id="game-menu-toggle" aria-label="Abrir FishingCat" aria-expanded="false" aria-controls="game-nav-panel">
+<img src="./logo.png?v=20260812-navbar-logo" alt="" class="nav-logo-image" aria-hidden="true">
+<span class="sr-only">GATOCHENTE</span>
+</button>
+</div>
+<div class="nav-center">
+
+<div class="pill-selector"></div>
+
+<a href="/" class="nav-item">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<path d="M3 11l9-7 9 7"></path>
+<path d="M5 10v10h14V10"></path>
+</svg>
+<span>Inicio</span>
+</a>
+
+<a href="/sobre-mi" class="nav-item">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<circle cx="12" cy="8" r="4"></circle>
+<path d="M4 20c2-4 14-4 16 0"></path>
+</svg>
+<span>Sobre</span>
+</a>
+
+<a href="/proyectos" class="nav-item active">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<rect x="3" y="4" width="18" height="14" rx="2"></rect>
+<path d="M3 10h18"></path>
+</svg>
+<span>Proyectos</span>
+</a>
+
+
+<a href="/catpack" class="nav-item">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<path d="M4 7l8-4 8 4-8 4-8-4z"></path>
+<path d="M4 7v10l8 4 8-4V7"></path>
+<path d="M12 11v10"></path>
+</svg>
+<span>CatPack</span>
+</a>
+<a href="/contacto" class="nav-item">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<path d="M4 6h16v12H4z"></path>
+<path d="M4 6l8 7 8-7"></path>
+</svg>
+<span>Contacto</span>
+</a>
+
+</div>
+
+</div>
+
+<div class="game-nav-panel" id="game-nav-panel" aria-hidden="true">
+<div class="tool-panel-banner" aria-hidden="true"><img src="img/banner.jpg" alt=""></div>
+<div class="nav-search-overlay" id="nav-search-overlay" aria-hidden="true">
+<input type="text" id="search-input" placeholder="Buscar en la página...">
+<button type="button" class="search-clear" id="search-clear" aria-label="Limpiar busqueda" hidden>×</button>
+</div>
+
+<div class="settings-panel" id="settings-panel" aria-hidden="true">
+<p>Apariencia</p>
+<div class="theme-options" role="group" aria-label="Selector de tema">
+<button type="button" class="theme-option" data-theme-choice="auto">Auto</button>
+<button type="button" class="theme-option" data-theme-choice="light">Claro</button>
+<button type="button" class="theme-option" data-theme-choice="dark">Oscuro</button>
+</div>
+</div>
+<div class="game-nav-header">
+<div class="game-nav-copy">
+<span>Jugando ahora</span>
+<strong>FishingCat</strong>
+<small>(Gatito Pescador)</small>
+</div>
+<button type="button" class="game-nav-play" id="game-nav-play">Ver juego completo</button>
+</div>
+<div class="nav-fishingcat" aria-label="FishingCat en la navbar">
+<div class="nav-game-hud" aria-live="polite">
+<span>Puntos <strong id="nav-game-score">0</strong></span>
+<span>Tiempo <strong id="nav-game-time">15</strong></span>
+<button type="button" class="nav-game-start" id="nav-game-start">Jugar</button>
+</div>
+<div class="nav-game-board" id="nav-game-board" tabindex="0" aria-label="Mini FishingCat en la navbar">
+<div class="nav-game-message" id="nav-game-message">Pulsa jugar</div>
+<div class="player cat-player nav-cat-player" id="nav-game-player" aria-hidden="true">
+<span class="cat-ear cat-ear-left"></span>
+<span class="cat-ear cat-ear-right"></span>
+<span class="cat-face">=^.^=</span>
+</div>
+</div>
+</div>
+</div>
+
+</nav>
+
+<section class="projects">
+
+<div class="projects-heading">
+<span>Archivo de proyectos</span>
+<h1>Proyectos</h1>
+<p>
+El proyecto más reciente aparece destacado arriba. Debajo quedan los proyectos anteriores ordenados por año para mostrar cómo han ido creciendo mis ideas.
+</p>
+<div class="projects-order" aria-label="Orden de los proyectos">
+<span>2023</span>
+<span>2024</span>
+<span>2025</span>
+<span>2026</span>
+</div>
+</div>
+
+<div class="card project-featured" id="catpack">
+
+<span class="project-recent-label">Proyecto reciente</span>
+
+<img src="img/catpack-logo.png" alt="Logo de CatPack">
+
+<p class="card-kicker">Aplicación para Windows · 2026</p>
+<h3>CatPack</h3>
+
+<p>
+Archivador moderno creado por GATOCHENTE para comprimir, extraer, inspeccionar y verificar archivos .gcat en Windows.
+Utiliza compresión ZSTD, hashes SHA-256, metadata propia y un sistema de actualización desde GATOCHENTE.
+</p>
+
+<div class="project-notes">
+<p><strong>Objetivo:</strong> crear una herramienta propia para empaquetar archivos con una experiencia simple y moderna.</p>
+<p><strong>Aprendizaje:</strong> diseño de formato de archivo, verificación de integridad, instalador y flujo de actualización.</p>
+</div>
+
+<div class="card-tags">
+<span>Windows</span>
+<span>.gcat</span>
+<span>ZSTD</span>
+<span>SHA-256</span>
+</div>
+
+<div class="project-collaborators" aria-label="Colaboradores del proyecto">
+<span class="collaborators-label">Colaborador</span>
+<div class="user-chip" data-user="gatochente">
+<img class="user-avatar" src="img/gatochente.jpg" alt="Foto de perfil de GATOCHENTE">
+<span class="user-handle">@gatochente</span>
+<button type="button" class="verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver términos de la insignia">
+<img src="img/check.PNG" alt="Verificado">
+</button>
+</div>
+</div>
+
+</div>
+
+<div class="card" id="bano-ecologico">
+
+<img src="img/proyecto1.jpg" alt="Maqueta de baño ecológico con sistema de ahorro de agua">
+
+<p class="card-kicker">Proyecto escolar · 2023</p>
+<h3>Baño ecológico</h3>
+
+<p>
+Maqueta de baño ecológico con sistema de ahorro de agua y reciclaje de residuos.
+Utiliza Circuitos, Protoboard, Bomba de agua y Pulsador.
+</p>
+
+<div class="project-notes">
+<p><strong>Objetivo:</strong> representar una solución simple para cuidar el agua.</p>
+<p><strong>Aprendizaje:</strong> conexión de circuitos básicos y control de una bomba de agua.</p>
+</div>
+
+<div class="card-tags">
+<span>Circuitos</span>
+<span>Protoboard</span>
+<span>Bomba de agua</span>
+<span>Pulsador</span>
+</div>
+
+<div class="project-collaborators" aria-label="Colaboradores del proyecto">
+<span class="collaborators-label">Colaborador</span>
+<div class="user-chip" data-user="gatochente">
+<img class="user-avatar" src="img/gatochente.jpg" alt="Foto de perfil de GATOCHENTE">
+<span class="user-handle">@gatochente</span>
+<button type="button" class="verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver términos de la insignia">
+<img src="img/check.PNG" alt="Verificado">
+</button>
+</div>
+</div>
+
+</div>
+
+<div class="card" id="paso-peatonal">
+
+<img src="img/proyecto2.jpg" alt="Maqueta de paso peatonal con semáforo inteligente y barreras automáticas">
+
+<p class="card-kicker">Prototipo con Arduino · 2024</p>
+<h3>Innovador paso peatonal</h3>
+
+<p>
+Maqueta de paso peatonal con barreras automáticas y semáforo inteligente. Utiliza un temporizador para avisar a peatones y vehículos, activando las barreras y cambiando el semáforo en consecuencia.
+Utiliza Arduino, Protoboard, LEDs y Servomotores.
+</p>
+
+<div class="project-notes">
+<p><strong>Objetivo:</strong> mejorar la seguridad de peatones y vehículos en cruces.</p>
+<p><strong>Aprendizaje:</strong> coordinación entre LEDs, servomotores y tiempos de respuesta.</p>
+</div>
+
+<div class="card-tags">
+<span>Arduino</span>
+<span>Protoboard</span>
+<span>LEDs</span>
+<span>Servomotores</span>
+</div>
+
+<div class="project-collaborators" aria-label="Colaboradores del proyecto">
+<span class="collaborators-label">Colaborador</span>
+<div class="user-chip" data-user="gatochente">
+<img class="user-avatar" src="img/gatochente.jpg" alt="Foto de perfil de GATOCHENTE">
+<span class="user-handle">@gatochente</span>
+<button type="button" class="verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver términos de la insignia">
+<img src="img/check.PNG" alt="Verificado">
+</button>
+</div>
+</div>
+
+</div>
+
+<div class="card" id="detecta-y-protege">
+
+<img src="img/proyecto3.jpg" alt="Maqueta de sistema de seguridad sísmica con sensores y luces LED">
+
+<p class="card-kicker">Sistema de alerta · 2025</p>
+<h3>Detecta y protege</h3>
+
+<p>
+Maqueta de sistema de seguridad ante sismos. Utiliza sensores de movimiento y vibración para detectar actividad sísmica.
+Utiliza Arduino, Protoboard, Sensores de Vibración y LEDs.
+</p>
+
+<div class="project-notes">
+<p><strong>Objetivo:</strong> alertar de forma visual cuando se detecta vibración.</p>
+<p><strong>Aprendizaje:</strong> lectura de sensores y diseño de respuestas automáticas.</p>
+</div>
+
+<div class="card-tags">
+<span>Arduino</span>
+<span>Sensores</span>
+<span>LEDs</span>
+</div>
+
+<div class="project-collaborators" aria-label="Colaboradores del proyecto">
+<span class="collaborators-label">Colaborador</span>
+<div class="user-chip" data-user="gatochente">
+<img class="user-avatar" src="img/gatochente.jpg" alt="Foto de perfil de GATOCHENTE">
+<span class="user-handle">@gatochente</span>
+<button type="button" class="verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver términos de la insignia">
+<img src="img/check.PNG" alt="Verificado">
+</button>
+</div>
+</div>
+
+</div>
+
+</section>
+
+<footer class="site-footer" tabindex="0" aria-expanded="false" aria-label="Ver informacion legal de GATOCHENTE">
+<div class="footer-reveal">
+<img src="img/footer.png" alt="Logo de GATOCHENTE" class="footer-logo">
+<div class="footer-info">
+<strong>GATOCHENTE</strong>
+<p>Portafolio personal de tecnologia, programacion y proyectos creativos. El contenido, imagenes, ideas y textos pertenecen a GATOCHENTE salvo que se indique lo contrario.</p>
+<p class="footer-terms">Terminos de uso: puedes visitar, compartir y aprender desde esta pagina, pero no copiar el contenido completo, logos o proyectos como si fueran propios.</p>
+</div>
+</div>
+<p id="year" class="footer-copy"></p>
+</footer>
+
+<script src="script.js?v=20260812-paypal-icon-mark-fix"></script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
