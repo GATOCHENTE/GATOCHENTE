@@ -1,4 +1,4 @@
-const CACHE_VERSION = "gatochente-v122";
+const CACHE_VERSION = "gatochente-v123";
 const APP_SHELL_FILES = [
 	"./",
 	"./index.html",
