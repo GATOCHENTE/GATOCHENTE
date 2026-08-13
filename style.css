@@ -1834,9 +1834,9 @@ font-size:clamp(8px,1.05vw,15px);
 line-height:1;
 letter-spacing:0;
 white-space:pre;
-color:rgba(255,248,236,0.62);
+color:rgba(0,0,0,0.68);
 text-align:left;
-text-shadow:0 0 10px rgba(255,248,236,0.2),0 10px 24px rgba(0,0,0,0.16);
+text-shadow:0 0 10px rgba(255,255,255,0.22),0 10px 24px rgba(0,0,0,0.18);
 user-select:none;
 
 }
@@ -6033,8 +6033,8 @@ linear-gradient(115deg,rgba(255,155,85,0.16),rgba(125,211,252,0.16));
 
 html[data-theme="dark"] .hero-ascii-canvas{
 
-color:rgba(247,243,223,0.76);
-text-shadow:0 0 10px rgba(125,211,252,0.22),0 10px 24px rgba(0,0,0,0.28);
+color:rgba(0,0,0,0.82);
+text-shadow:0 0 9px rgba(255,255,255,0.3),0 10px 24px rgba(0,0,0,0.3);
 
 }
 
@@ -6122,8 +6122,8 @@ display:none;
 
 .hero-ascii-canvas{
 font-size:clamp(8px,1.05vw,13px);
-color:rgba(18,43,50,0.56);
-text-shadow:0 0 8px rgba(255,255,255,0.18),0 10px 24px rgba(0,0,0,0.18);
+color:rgba(0,0,0,0.72);
+text-shadow:0 0 8px rgba(255,255,255,0.24),0 10px 24px rgba(0,0,0,0.2);
 }
 
 .hero-large-content{
@@ -6344,8 +6344,8 @@ grid-template-areas:
 .hero-large-content{border-radius:20px;width:min(100%,280px);max-width:calc(100vw - 48px);padding:16px 12px;overflow:hidden;}
 .hero-ascii-canvas{
 font-size:clamp(6px,1.45vw,9px);
-color:rgba(18,43,50,0.62);
-text-shadow:0 0 8px rgba(255,255,255,0.22),0 8px 18px rgba(0,0,0,0.2);
+color:rgba(0,0,0,0.78);
+text-shadow:0 0 8px rgba(255,255,255,0.3),0 8px 18px rgba(0,0,0,0.24);
 }
 .hero-large-content h1{font-size:28px;}
 .hero-large-content > p:not(.hero-subtitle){font-size:14px;}
