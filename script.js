@@ -1439,6 +1439,7 @@ function initProfileChips() {
   const scriptElement = document.querySelector('script[src*="script.js"]');
   const assetBase = scriptElement ? scriptElement.src : window.location.href;
   const avatarUrl = new URL('img/gatochente.jpg', assetBase).href;
+  const bannerUrl = new URL('img/banner.jpg', assetBase).href;
   const checkBadgeUrl = new URL('img/check.PNG', assetBase).href;
   const catSocialUrl = new URL('img/catsocial.PNG', assetBase).href;
 
@@ -1450,7 +1451,9 @@ function initProfileChips() {
           <path d="M18 6l-12 12"></path>
         </svg>
       </button>
-      <div class="profile-cover" aria-hidden="true"></div>
+      <div class="profile-cover" aria-hidden="true">
+        <img src="${bannerUrl}" alt="">
+      </div>
       <div class="profile-header">
         <img class="profile-avatar" src="${avatarUrl}" alt="Foto de perfil de GATOCHENTE">
         <div class="profile-title-group">
