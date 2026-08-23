@@ -521,11 +521,24 @@ function moveSelector(activeItem) {
   selector.style.left = activeItem.offsetLeft + 'px';
 }
 
+function scrollNavItemIntoView(activeItem, behavior = 'smooth') {
+  if (!navCenter || !activeItem) return;
+  if (navCenter.scrollWidth <= navCenter.clientWidth + 1) return;
+
+  const targetLeft = activeItem.offsetLeft - (navCenter.clientWidth - activeItem.offsetWidth) / 2;
+  const maxLeft = navCenter.scrollWidth - navCenter.clientWidth;
+  navCenter.scrollTo({
+    left: Math.max(0, Math.min(maxLeft, targetLeft)),
+    behavior
+  });
+}
+
 function setActiveNavItem(activeItem) {
   if (!activeItem) return;
   navItems.forEach((item) => item.classList.remove('active'));
   activeItem.classList.add('active');
   moveSelector(activeItem);
+  scrollNavItemIntoView(activeItem);
 }
 
 function getNearestNavItem(clientX) {
@@ -571,6 +584,7 @@ function refreshSelector() {
   }
   if (activeItem) {
     moveSelector(activeItem);
+    scrollNavItemIntoView(activeItem, 'auto');
   }
 }
 
@@ -1694,6 +1708,37 @@ function initNews() {
     if (authStatus) authStatus.textContent = message || '';
   }
 
+  function getPasskeyUnavailableMessage() {
+    if (!supabaseClient) return 'Configura supabase-config.js para activar Supabase.';
+    if (!passkeysEnabled) return 'Activa enablePasskeys en supabase-config.js.';
+    if (!window.PublicKeyCredential) return 'Este navegador no soporta passkeys/WebAuthn en esta pagina.';
+    return 'El SDK de Supabase cargado no tiene soporte de passkeys. Revisa cache y version del CDN.';
+  }
+
+  function getPasskeyErrorMessage(error, action = 'usar') {
+    const code = error?.code || error?.status || '';
+    const message = String(error?.message || '').toLowerCase();
+    if (code === 'passkey_disabled' || (message.includes('passkey') && message.includes('disabled'))) {
+      return 'Supabase aun dice que Passkeys esta apagado para este proyecto.';
+    }
+    if (code === 'webauthn_credential_not_found') {
+      return 'No existe una passkey registrada para esta cuenta. Entra con contrasena y crea una primero.';
+    }
+    if (code === 'webauthn_credential_exists') {
+      return 'Esta passkey ya esta registrada para tu cuenta.';
+    }
+    if (code === 'email_not_confirmed') {
+      return 'Tu email debe estar confirmado antes de usar passkey.';
+    }
+    if (message.includes('origin') || message.includes('rp id') || message.includes('relying party')) {
+      return 'El dominio WebAuthn no coincide. Revisa RP ID gatochente.com y origins https://www.gatochente.com, https://gatochente.com.';
+    }
+    if (message.includes('cancel') || message.includes('notallowed')) {
+      return 'La passkey se cancelo o el navegador no permitio abrirla.';
+    }
+    return `No se pudo ${action} la passkey. Revisa Supabase Passkeys y el dominio de la web.`;
+  }
+
   function normalizePost(post) {
     const publishedAt = post.published_at || post.publishedAt || post.date || new Date().toISOString();
     return {
@@ -1937,14 +1982,15 @@ function initNews() {
 
   passkeyLoginButton?.addEventListener('click', async () => {
     if (!supabaseClient || !canUsePasskeys) {
-      setStatus('Las passkeys todavia no estan activadas en Supabase.');
+      setStatus(getPasskeyUnavailableMessage());
       return;
     }
 
     setStatus('Abriendo passkey...');
     const { error } = await supabaseClient.auth.signInWithPasskey();
     if (error) {
-      setStatus('No se pudo entrar con passkey.');
+      console.error('Passkey sign-in error:', error);
+      setStatus(getPasskeyErrorMessage(error, 'entrar con'));
       return;
     }
 
@@ -1965,13 +2011,18 @@ function initNews() {
 
   registerPasskeyButton?.addEventListener('click', async () => {
     if (!supabaseClient || !canUsePasskeys || !adminUnlocked) {
-      setStatus('Primero entra con tu cuenta admin.');
+      setStatus(!adminUnlocked ? 'Primero entra con tu cuenta admin.' : getPasskeyUnavailableMessage());
       return;
     }
 
     setStatus('Creando passkey...');
     const { error } = await supabaseClient.auth.registerPasskey();
-    setStatus(error ? 'No se pudo crear la passkey.' : 'Passkey creada para esta cuenta.');
+    if (error) {
+      console.error('Passkey registration error:', error);
+      setStatus(getPasskeyErrorMessage(error, 'crear'));
+      return;
+    }
+    setStatus('Passkey creada para esta cuenta.');
   });
 
   async function uploadNewsImage(file) {
@@ -2705,6 +2756,7 @@ function initDraggableNavSelector() {
   navCenter.addEventListener('pointerdown', (event) => {
     if (!event.isPrimary || event.button > 0) return;
     if (navbar && (navbar.classList.contains('search-open') || navbar.classList.contains('settings-open') || navbar.classList.contains('game-menu-open'))) return;
+    if (navCenter.scrollWidth > navCenter.clientWidth + 1) return;
 
     dragState.pointerId = event.pointerId;
     dragState.startX = event.clientX;
