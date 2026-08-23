@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 
@@ -75,7 +75,7 @@ document.documentElement.dataset.theme=theme;
 
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="style.css?v=20260813-profile-banner">
+<link rel="stylesheet" href="style.css?v=20260823-account-card">
 
 </head>
 
@@ -134,6 +134,15 @@ document.documentElement.dataset.theme=theme;
 <path d="M12 11v10"></path>
 </svg>
 <span>CatPack</span>
+</a>
+<a href="/noticias" class="nav-item">
+<svg class="nav-icon" viewBox="0 0 24 24">
+<path d="M4 5h13v14H4z"></path>
+<path d="M17 8h3v11h-3"></path>
+<path d="M7 9h7"></path>
+<path d="M7 13h7"></path>
+</svg>
+<span>Noticias</span>
 </a>
 <a href="/contacto" class="nav-item">
 <svg class="nav-icon" viewBox="0 0 24 24">
@@ -406,6 +415,33 @@ Mueve al gatito, pesca los peces brillantes y esquiva los peces explosivos antes
 
 </section>
 
+
+<section class="news-home-section" aria-labelledby="home-news-title">
+
+<div class="news-container">
+
+<div class="section-heading">
+<span>Noticiero</span>
+<h2 id="home-news-title">Ultimas noticias de GATOCHENTE</h2>
+<p>
+Actualizaciones rapidas sobre proyectos, cambios de la web y cosas nuevas que voy construyendo.
+</p>
+</div>
+
+<div class="news-grid news-home-grid" id="home-news-grid"></div>
+
+<a href="/noticias" class="news-more-link">
+<svg viewBox="0 0 24 24" aria-hidden="true">
+<path d="M5 12h14"></path>
+<path d="M13 6l6 6-6 6"></path>
+</svg>
+<span>Ver noticiero completo</span>
+</a>
+
+</div>
+
+</section>
+
 <section class="featured-projects" aria-labelledby="featured-title">
 
 <div class="featured-container">
@@ -536,7 +572,9 @@ Me gustan los proyectos que mezclan una idea útil con prototipos físicos, prog
 </div>
 </div>
 
-<script src="script.js?v=20260813-profile-banner"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=20260823-account-card"></script>
+<script src="script.js?v=20260823-account-card"></script>
 
 </body>
 </html>

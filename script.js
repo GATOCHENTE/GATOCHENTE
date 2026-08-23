@@ -92,6 +92,186 @@ const browserThemeColors = {
   dark: '#151a22'
 };
 
+let gatochenteSupabaseClient = null;
+const gatochenteAccount = {
+  client: null,
+  isAdmin: false,
+  session: null,
+  listeners: []
+};
+
+function getGatochenteSupabaseClient() {
+  if (gatochenteSupabaseClient) return gatochenteSupabaseClient;
+
+  const config = window.GATOCHENTE_SUPABASE || {};
+  const hasConfig = Boolean(config.url && config.publishableKey && window.supabase?.createClient);
+  if (!hasConfig) return null;
+
+  gatochenteSupabaseClient = window.supabase.createClient(config.url, config.publishableKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storageKey: 'gatochente-account-session',
+      ...(config.enablePasskeys ? { experimental: { passkey: true } } : {})
+    }
+  });
+
+  return gatochenteSupabaseClient;
+}
+
+async function checkGatochenteAdminSession(session) {
+  const client = getGatochenteSupabaseClient();
+  if (!client || !session) return false;
+  const { data, error } = await client.rpc('is_news_admin');
+  return !error && data === true;
+}
+
+function subscribeGatochenteAccount(listener) {
+  gatochenteAccount.listeners.push(listener);
+  listener({ ...gatochenteAccount });
+}
+
+function updateGatochenteAccount(nextState) {
+  Object.assign(gatochenteAccount, nextState);
+  gatochenteAccount.listeners.forEach((listener) => listener({ ...gatochenteAccount }));
+}
+
+function initGatochenteAccount() {
+  const client = getGatochenteSupabaseClient();
+  const navbarElement = document.querySelector('.navbar');
+  const navLeft = document.querySelector('.nav-left');
+  if (!client || !navLeft) return;
+
+  const scriptElement = document.querySelector('script[src*="script.js"]');
+  const assetBase = scriptElement ? scriptElement.src : window.location.href;
+  const avatarUrl = new URL('img/gatochente.jpg', assetBase).href;
+
+  const accountButton = document.createElement('button');
+  accountButton.type = 'button';
+  accountButton.className = 'account-nav-button';
+  accountButton.setAttribute('aria-label', 'Iniciar sesion en GATOCHENTE Account');
+  accountButton.setAttribute('aria-expanded', 'false');
+  accountButton.innerHTML = '<span class="account-login-glyph" aria-hidden="true">\uE000</span>';
+
+  const accountMenu = document.createElement('div');
+  accountMenu.className = 'account-nav-menu';
+  accountMenu.hidden = true;
+  accountMenu.innerHTML = `
+    <div class="account-nav-card">
+      <img src="${avatarUrl}" alt="Foto de perfil de GATOCHENTE">
+      <div>
+        <span>GATOCHENTE\u2122 Account</span>
+        <strong>@gatochente</strong>
+        <p data-account-status>Inicia sesion para editar</p>
+      </div>
+    </div>
+    <div class="account-nav-actions">
+      <a href="/noticias" data-account-link>Ir a cuenta</a>
+      <button type="button" data-account-logout hidden>Salir</button>
+    </div>
+    <form class="account-login-form" data-account-login-form>
+      <label>Email<input type="email" data-account-email autocomplete="email" required></label>
+      <label>Contrasena<input type="password" data-account-password autocomplete="current-password" required></label>
+      <p data-account-message></p>
+      <button type="submit">Entrar</button>
+    </form>
+  `;
+
+  navLeft.appendChild(accountButton);
+  navbarElement?.appendChild(accountMenu);
+
+  function closeMenu() {
+    accountMenu.hidden = true;
+    accountButton.setAttribute('aria-expanded', 'false');
+    navbarElement?.classList.remove('account-menu-open');
+  }
+
+  accountButton.addEventListener('click', () => {
+    const isOpening = accountMenu.hidden;
+    accountMenu.hidden = !isOpening;
+    accountButton.setAttribute('aria-expanded', String(isOpening));
+    navbarElement?.classList.toggle('account-menu-open', isOpening);
+  });
+
+  accountMenu.querySelector('[data-account-logout]')?.addEventListener('click', async () => {
+    await client.auth.signOut();
+    updateGatochenteAccount({ client, session: null, isAdmin: false });
+    closeMenu();
+  });
+
+  accountMenu.querySelector('[data-account-login-form]')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const email = form.querySelector('[data-account-email]');
+    const password = form.querySelector('[data-account-password]');
+    const message = form.querySelector('[data-account-message]');
+    if (!email || !password) return;
+
+    if (message) message.textContent = 'Entrando...';
+    const { error } = await client.auth.signInWithPassword({
+      email: email.value.trim(),
+      password: password.value
+    });
+
+    if (error) {
+      password.value = '';
+      if (message) message.textContent = 'No se pudo iniciar sesion.';
+      return;
+    }
+
+    const { data } = await client.auth.getSession();
+    const isAdmin = await checkGatochenteAdminSession(data.session);
+    if (!isAdmin) {
+      await client.auth.signOut();
+      updateGatochenteAccount({ client, session: null, isAdmin: false });
+      if (message) message.textContent = 'Esta cuenta no tiene permisos.';
+      return;
+    }
+
+    password.value = '';
+    if (message) message.textContent = 'Sesion iniciada.';
+    updateGatochenteAccount({ client, session: data.session, isAdmin: true });
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return;
+    if (event.target.closest('.account-nav-button,.account-nav-menu')) return;
+    closeMenu();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeMenu();
+  });
+
+  subscribeGatochenteAccount(({ isAdmin, session }) => {
+    const hasSession = Boolean(session);
+    accountButton.classList.toggle('is-logged-in', hasSession);
+    accountButton.setAttribute('aria-label', hasSession ? 'Abrir GATOCHENTE Account' : 'Iniciar sesion en GATOCHENTE Account');
+    accountButton.innerHTML = hasSession
+      ? `<img src="${avatarUrl}" alt="">`
+      : '<span class="account-login-glyph" aria-hidden="true">\uE000</span>';
+    const status = accountMenu.querySelector('[data-account-status]');
+    const logout = accountMenu.querySelector('[data-account-logout]');
+    const link = accountMenu.querySelector('[data-account-link]');
+    const loginForm = accountMenu.querySelector('[data-account-login-form]');
+    if (status) status.textContent = isAdmin ? 'Sesion admin activa' : 'Entra para editar noticias';
+    if (logout) logout.hidden = !hasSession;
+    if (link) link.textContent = hasSession ? 'Ir a cuenta' : 'Iniciar sesion';
+    if (loginForm) loginForm.hidden = hasSession;
+  });
+
+  client.auth.onAuthStateChange(async (_event, session) => {
+    const isAdmin = await checkGatochenteAdminSession(session);
+    updateGatochenteAccount({ client, session, isAdmin });
+  });
+
+  client.auth.getSession().then(async ({ data }) => {
+    const isAdmin = await checkGatochenteAdminSession(data.session);
+    updateGatochenteAccount({ client, session: data.session, isAdmin });
+  });
+}
+
 function getStoredThemePreference() {
   try {
     return localStorage.getItem(themeStorageKey) || 'auto';
@@ -166,6 +346,7 @@ const routePages = {
   '/sobre-mi': 'Sobre',
   '/proyectos': 'Proyectos',
   '/catpack': 'CatPack',
+  '/noticias': 'Noticias',
   '/contacto': 'Contacto'
 };
 
@@ -449,6 +630,13 @@ const globalSearchIndex = [
     description: 'Archivador moderno para comprimir, extraer, inspeccionar y verificar archivos .gcat en Windows.',
     url: '/catpack',
     keywords: ['catpack', 'cat pack', 'gcat', '.gcat', 'windows', 'archivador', 'compresor', 'zstd', 'sha-256', 'instalador']
+  },
+  {
+    title: 'Noticias',
+    eyebrow: 'Noticiero',
+    description: 'Mini blog con novedades, cambios de la web, avances de proyectos y actualizaciones de GATOCHENTE.',
+    url: '/noticias',
+    keywords: ['noticias', 'noticiero', 'blog', 'novedades', 'actualizaciones', 'posts', 'publicaciones']
   },
   {
     title: 'Baño ecológico',
@@ -1425,6 +1613,536 @@ function initVerificationBadges() {
   });
 }
 
+function initNews() {
+  const homeGrid = document.getElementById('home-news-grid');
+  const newsGrid = document.getElementById('news-grid');
+  const adminToggle = document.getElementById('news-admin-toggle');
+  const adminPanel = document.getElementById('news-admin-panel');
+  const loginForm = document.getElementById('news-login-form');
+  const editorForm = document.getElementById('news-editor-form');
+  const emailInput = document.getElementById('news-email-input');
+  const passwordInput = document.getElementById('news-password-input');
+  const authStatus = document.getElementById('news-auth-status');
+  const idInput = document.getElementById('news-id');
+  const titleInput = document.getElementById('news-title-input');
+  const categoryInput = document.getElementById('news-category-input');
+  const summaryInput = document.getElementById('news-summary-input');
+  const bodyInput = document.getElementById('news-body-input');
+  const imageInput = document.getElementById('news-image-input');
+  const imagePreview = document.getElementById('news-image-preview');
+  const imageDropzone = document.getElementById('news-dropzone');
+  const cancelButton = document.getElementById('news-cancel-button');
+  const deleteButton = document.getElementById('news-delete-button');
+  const logoutButton = document.getElementById('news-logout-button');
+  const passkeyLoginButton = document.getElementById('news-passkey-login-button');
+  const registerPasskeyButton = document.getElementById('news-register-passkey-button');
+  const accountPanel = document.getElementById('news-account-panel');
+  const composeButton = document.getElementById('news-compose-button');
+
+  if (!homeGrid && !newsGrid) return;
+
+  const defaultNews = [
+    {
+      id: 'catpack-beta',
+      title: 'CatPack Beta ya tiene pagina propia',
+      category: 'CatPack',
+      imageUrl: '',
+      summary: 'El proyecto CatPack suma una presentacion mas clara, versiones y una experiencia visual conectada con el portafolio.',
+      body: 'CatPack sigue creciendo como archivador moderno para Windows. La pagina ahora muestra mejor el estado del proyecto, las versiones y lo que viene despues.',
+      publishedAt: '2026-08-23T12:00:00Z'
+    },
+    {
+      id: 'web-limpia',
+      title: 'La web estrena noticiero',
+      category: 'Web',
+      imageUrl: '',
+      summary: 'GATOCHENTE ahora tiene un espacio para publicar novedades, cambios importantes y mini entradas tipo blog.',
+      body: 'Este noticiero nace para ordenar las actualizaciones del sitio, mostrar avances y dejar registro de las ideas nuevas.',
+      publishedAt: '2026-08-23T11:00:00Z'
+    },
+    {
+      id: 'fishingcat-navbar',
+      title: 'FishingCat vive dentro del logo',
+      category: 'Juego',
+      imageUrl: '',
+      summary: 'El boton del logo une buscador, temas y una demostracion compacta de FishingCat en la navbar.',
+      body: 'El panel del logo mantiene la identidad del sitio y deja jugar una version pequena de FishingCat sin salir de la pagina.',
+      publishedAt: '2026-08-22T16:00:00Z'
+    }
+  ];
+
+  const scriptElement = document.querySelector('script[src*="script.js"]');
+  const assetBase = scriptElement ? scriptElement.src : window.location.href;
+  const avatarUrl = new URL('img/gatochente.jpg', assetBase).href;
+  const checkBadgeUrl = new URL('img/check.PNG', assetBase).href;
+  const config = window.GATOCHENTE_SUPABASE || {};
+  const supabaseClient = getGatochenteSupabaseClient();
+  const hasSupabaseConfig = Boolean(supabaseClient);
+  const passkeysEnabled = Boolean(config.enablePasskeys);
+  const canUsePasskeys = Boolean(
+    passkeysEnabled &&
+    supabaseClient?.auth?.signInWithPasskey &&
+    supabaseClient?.auth?.registerPasskey &&
+    window.PublicKeyCredential
+  );
+
+  let newsItems = [...defaultNews];
+  let adminUnlocked = false;
+  let hasWelcomedSession = false;
+
+  function setStatus(message) {
+    if (authStatus) authStatus.textContent = message || '';
+  }
+
+  function normalizePost(post) {
+    const publishedAt = post.published_at || post.publishedAt || post.date || new Date().toISOString();
+    return {
+      id: post.id,
+      title: post.title,
+      category: post.category,
+      summary: post.summary,
+      body: post.body,
+      imageUrl: post.image_url || post.imageUrl || '',
+      publishedAt,
+      date: publishedAt.slice(0, 10)
+    };
+  }
+
+  function setAdminUnlocked(value, options = {}) {
+    adminUnlocked = value;
+    document.body.classList.toggle('news-admin-active', value);
+    if (editorForm) editorForm.hidden = true;
+    if (loginForm) loginForm.hidden = value;
+    if (accountPanel) accountPanel.hidden = !value;
+    if (accountPanel) accountPanel.classList.toggle('is-welcoming', Boolean(value && options.welcome));
+    if (registerPasskeyButton) registerPasskeyButton.hidden = !value || !canUsePasskeys;
+    renderNews();
+  }
+
+  function getNewsTimestamp(item) {
+    const time = Date.parse(item.publishedAt || item.date || '');
+    return Number.isNaN(time) ? 0 : time;
+  }
+
+  function formatDateTime(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleString('es-CL', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  function escapeHtml(value) {
+    return (value || '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    }[char]));
+  }
+
+  function getSortedNews() {
+    const seen = new Set();
+    return [...newsItems]
+      .filter((item) => {
+        const signature = [item.title, item.category, item.summary, item.body, item.imageUrl].join('|').toLowerCase();
+        if (seen.has(signature)) return false;
+        seen.add(signature);
+        return true;
+      })
+      .sort((a, b) => getNewsTimestamp(b) - getNewsTimestamp(a));
+  }
+
+  function createNewsCard(item, compact = false, isNewest = false) {
+    const article = document.createElement('article');
+    article.className = isNewest ? 'news-card news-card-newest' : 'news-card';
+    article.innerHTML = `
+      ${isNewest ? '<span class="news-newest-label">Nuevo</span>' : ''}
+      <div class="news-card-head">
+        <span class="news-category">${escapeHtml(item.category)}</span>
+        <time class="news-date" datetime="${escapeHtml(item.publishedAt || item.date)}">${escapeHtml(formatDateTime(item.publishedAt || item.date))}</time>
+      </div>
+      <h3>${escapeHtml(item.title)}</h3>
+      ${item.imageUrl ? `<img class="news-card-image" src="${escapeHtml(item.imageUrl)}" alt="">` : ''}
+      <p>${escapeHtml(compact ? item.summary : item.body || item.summary)}</p>
+      <div class="news-author-row">
+        <div class="user-chip user-chip-compact" data-user="gatochente">
+          <img class="user-avatar" src="${avatarUrl}" alt="Foto de perfil de GATOCHENTE">
+          <span class="user-handle">@gatochente</span>
+          <button type="button" class="verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver terminos de la insignia">
+            <img src="${checkBadgeUrl}" alt="Verificado">
+          </button>
+        </div>
+        <button type="button" class="news-edit-button" data-news-edit="${escapeHtml(item.id)}" aria-label="Editar noticia">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+          </svg>
+        </button>
+      </div>
+    `;
+    return article;
+  }
+
+  function renderInto(container, items, compact = false) {
+    if (!container) return;
+    container.innerHTML = '';
+    if (!items.length) {
+      const empty = document.createElement('p');
+      empty.className = 'news-empty';
+      empty.textContent = 'Todavia no hay noticias publicadas.';
+      container.appendChild(empty);
+      return;
+    }
+    items.forEach((item, index) => container.appendChild(createNewsCard(item, compact, index === 0)));
+  }
+
+  function renderNews() {
+    const sorted = getSortedNews();
+    renderInto(homeGrid, sorted.slice(0, 3), true);
+    renderInto(newsGrid, sorted, false);
+    document.body.classList.toggle('news-admin-active', adminUnlocked);
+  }
+
+  async function loadNews() {
+    if (!supabaseClient) {
+      newsItems = [...defaultNews];
+      renderNews();
+      return;
+    }
+
+    const { data, error } = await supabaseClient
+      .from('news_posts')
+      .select('id,title,category,summary,body,image_url,published_at')
+      .order('published_at', { ascending: false });
+
+    if (error) {
+      newsItems = [...defaultNews];
+      setStatus('No se pudo cargar Supabase. Mostrando noticias locales.');
+      renderNews();
+      return;
+    }
+
+    newsItems = (data || []).map(normalizePost);
+    renderNews();
+  }
+
+  async function refreshSession() {
+    if (!supabaseClient) {
+      setAdminUnlocked(false);
+      return;
+    }
+    const { data } = await supabaseClient.auth.getSession();
+    setAdminUnlocked(await checkGatochenteAdminSession(data.session));
+  }
+
+  function resetEditor() {
+    if (!editorForm) return;
+    idInput.value = '';
+    titleInput.value = '';
+    categoryInput.value = '';
+    summaryInput.value = '';
+    bodyInput.value = '';
+    if (imageInput) imageInput.value = '';
+    if (imagePreview) {
+      imagePreview.hidden = true;
+      imagePreview.innerHTML = '';
+    }
+    if (deleteButton) deleteButton.hidden = true;
+    editorForm.hidden = true;
+  }
+
+  function openComposer() {
+    if (!editorForm || !adminUnlocked) return;
+    editorForm.hidden = false;
+    if (!idInput.value && deleteButton) deleteButton.hidden = true;
+    titleInput.focus();
+  }
+
+  function editNews(id) {
+    const item = newsItems.find((news) => news.id === id);
+    if (!item || !editorForm) return;
+    idInput.value = item.id;
+    titleInput.value = item.title;
+    categoryInput.value = item.category;
+    summaryInput.value = item.summary;
+    bodyInput.value = item.body || item.summary;
+    if (imageInput) imageInput.value = '';
+    if (imagePreview) {
+      imagePreview.hidden = !item.imageUrl;
+      imagePreview.innerHTML = item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt=""><span>Imagen actual</span>` : '';
+    }
+    if (deleteButton) deleteButton.hidden = false;
+    adminPanel?.classList.add('is-open');
+    adminPanel?.setAttribute('aria-hidden', 'false');
+    adminToggle?.setAttribute('aria-expanded', 'true');
+    openComposer();
+  }
+
+  adminToggle?.addEventListener('click', () => {
+    const isOpen = adminPanel.classList.toggle('is-open');
+    adminPanel.setAttribute('aria-hidden', String(!isOpen));
+    adminToggle.setAttribute('aria-expanded', String(isOpen));
+    if (isOpen) (adminUnlocked ? titleInput : emailInput)?.focus();
+  });
+
+  if (passkeyLoginButton) {
+    passkeyLoginButton.hidden = !canUsePasskeys;
+  }
+
+  loginForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const globalClient = gatochenteAccount.client || supabaseClient;
+    if (globalClient) {
+      setStatus('Tambien puedes entrar desde el boton de cuenta del navbar.');
+    }
+    if (!supabaseClient) {
+      setStatus('Configura supabase-config.js para activar el login seguro.');
+      return;
+    }
+
+    setStatus('Entrando...');
+    const { error } = await supabaseClient.auth.signInWithPassword({
+      email: emailInput.value.trim(),
+      password: passwordInput.value
+    });
+
+    if (error) {
+      passwordInput.value = '';
+      passwordInput.focus();
+      setStatus('No se pudo iniciar sesion. Revisa email y contrasena.');
+      return;
+    }
+
+    const { data } = await supabaseClient.auth.getSession();
+    if (!(await checkGatochenteAdminSession(data.session))) {
+      await supabaseClient.auth.signOut();
+      setStatus('Esta cuenta no tiene permisos para editar noticias.');
+      setAdminUnlocked(false);
+      return;
+    }
+
+    passwordInput.value = '';
+    setStatus('Sesion iniciada.');
+    hasWelcomedSession = true;
+    updateGatochenteAccount({ client: supabaseClient, session: data.session, isAdmin: true });
+    setAdminUnlocked(true, { welcome: true });
+    resetEditor();
+  });
+
+  passkeyLoginButton?.addEventListener('click', async () => {
+    if (!supabaseClient || !canUsePasskeys) {
+      setStatus('Las passkeys todavia no estan activadas en Supabase.');
+      return;
+    }
+
+    setStatus('Abriendo passkey...');
+    const { error } = await supabaseClient.auth.signInWithPasskey();
+    if (error) {
+      setStatus('No se pudo entrar con passkey.');
+      return;
+    }
+
+    const { data } = await supabaseClient.auth.getSession();
+    if (!(await checkGatochenteAdminSession(data.session))) {
+      await supabaseClient.auth.signOut();
+      setStatus('Esta passkey no pertenece al admin.');
+      setAdminUnlocked(false);
+      return;
+    }
+
+    setStatus('Sesion iniciada con passkey.');
+    hasWelcomedSession = true;
+    updateGatochenteAccount({ client: supabaseClient, session: data.session, isAdmin: true });
+    setAdminUnlocked(true, { welcome: true });
+    resetEditor();
+  });
+
+  registerPasskeyButton?.addEventListener('click', async () => {
+    if (!supabaseClient || !canUsePasskeys || !adminUnlocked) {
+      setStatus('Primero entra con tu cuenta admin.');
+      return;
+    }
+
+    setStatus('Creando passkey...');
+    const { error } = await supabaseClient.auth.registerPasskey();
+    setStatus(error ? 'No se pudo crear la passkey.' : 'Passkey creada para esta cuenta.');
+  });
+
+  async function uploadNewsImage(file) {
+    if (!file || !supabaseClient) return '';
+    const extension = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+    const filePath = `news/${Date.now()}-${Math.random().toString(16).slice(2)}.${extension}`;
+    const { error } = await supabaseClient.storage
+      .from('gatochente-media')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+    if (error) throw error;
+    const { data } = supabaseClient.storage.from('gatochente-media').getPublicUrl(filePath);
+    return data.publicUrl;
+  }
+
+  imageInput?.addEventListener('change', () => {
+    const file = imageInput.files?.[0];
+    if (!imagePreview) return;
+    if (!file) {
+      imagePreview.hidden = true;
+      imagePreview.innerHTML = '';
+      return;
+    }
+    const previewUrl = URL.createObjectURL(file);
+    imagePreview.hidden = false;
+    imagePreview.innerHTML = `<img src="${previewUrl}" alt=""><span>${escapeHtml(file.name)}</span>`;
+  });
+
+  function setImageFile(file) {
+    if (!imageInput || !file) return;
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    imageInput.files = transfer.files;
+    imageInput.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  imageDropzone?.addEventListener('click', () => imageInput?.click());
+
+  imageDropzone?.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    imageInput?.click();
+  });
+
+  imageDropzone?.addEventListener('dragover', (event) => {
+    event.preventDefault();
+    imageDropzone.classList.add('is-dragging');
+  });
+
+  imageDropzone?.addEventListener('dragleave', () => {
+    imageDropzone.classList.remove('is-dragging');
+  });
+
+  imageDropzone?.addEventListener('drop', (event) => {
+    event.preventDefault();
+    imageDropzone.classList.remove('is-dragging');
+    const file = event.dataTransfer?.files?.[0];
+    if (!file || !file.type.startsWith('image/')) {
+      setStatus('Solo puedes adjuntar imagenes.');
+      return;
+    }
+    setImageFile(file);
+  });
+
+  editorForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!supabaseClient || !adminUnlocked) return;
+
+    let imageUrl = idInput.value
+      ? newsItems.find((item) => item.id === idInput.value)?.imageUrl || ''
+      : '';
+
+    try {
+      const selectedImage = imageInput?.files?.[0];
+      if (selectedImage) {
+        setStatus('Subiendo imagen...');
+        imageUrl = await uploadNewsImage(selectedImage);
+      }
+    } catch {
+      setStatus('No se pudo subir la imagen.');
+      return;
+    }
+
+    const payload = {
+      title: titleInput.value.trim(),
+      category: categoryInput.value.trim(),
+      summary: summaryInput.value.trim(),
+      body: bodyInput.value.trim(),
+      image_url: imageUrl || null,
+      published_at: idInput.value
+        ? newsItems.find((item) => item.id === idInput.value)?.publishedAt || new Date().toISOString()
+        : new Date().toISOString()
+    };
+
+    const request = idInput.value
+      ? supabaseClient.from('news_posts').update(payload).eq('id', idInput.value)
+      : supabaseClient.from('news_posts').insert(payload);
+
+    const { error } = await request;
+    if (error) {
+      setStatus('Supabase rechazo el cambio. Revisa que tu email sea el admin en RLS.');
+      return;
+    }
+
+    setStatus('Noticia guardada.');
+    resetEditor();
+    await loadNews();
+  });
+
+  cancelButton?.addEventListener('click', resetEditor);
+
+  composeButton?.addEventListener('click', () => {
+    idInput.value = '';
+    titleInput.value = '';
+    categoryInput.value = '';
+    summaryInput.value = '';
+    bodyInput.value = '';
+    if (imageInput) imageInput.value = '';
+    if (imagePreview) {
+      imagePreview.hidden = true;
+      imagePreview.innerHTML = '';
+    }
+    if (deleteButton) deleteButton.hidden = true;
+    openComposer();
+  });
+
+  logoutButton?.addEventListener('click', async () => {
+    if (supabaseClient) await supabaseClient.auth.signOut();
+    setStatus('Sesion cerrada.');
+    updateGatochenteAccount({ client: supabaseClient, session: null, isAdmin: false });
+    setAdminUnlocked(false);
+    resetEditor();
+  });
+
+  deleteButton?.addEventListener('click', async () => {
+    if (!idInput.value || !supabaseClient || !adminUnlocked) return;
+    const { error } = await supabaseClient.from('news_posts').delete().eq('id', idInput.value);
+    if (error) {
+      setStatus('No se pudo eliminar la noticia.');
+      return;
+    }
+    setStatus('Noticia eliminada.');
+    resetEditor();
+    await loadNews();
+  });
+
+  newsGrid?.addEventListener('click', (event) => {
+    const button = event.target instanceof Element ? event.target.closest('[data-news-edit]') : null;
+    if (!button || !adminUnlocked) return;
+    editNews(button.dataset.newsEdit);
+  });
+
+  if (supabaseClient) {
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      const isAdmin = await checkGatochenteAdminSession(session);
+      updateGatochenteAccount({ client: supabaseClient, session, isAdmin });
+      const shouldWelcome = isAdmin && event === 'SIGNED_IN' && !hasWelcomedSession;
+      setAdminUnlocked(isAdmin, { welcome: shouldWelcome });
+      if (shouldWelcome) hasWelcomedSession = true;
+    });
+  } else {
+    setStatus('Backend pendiente: completa supabase-config.js.');
+  }
+
+  renderNews();
+  loadNews();
+  refreshSession();
+}
+
 function initProfileChips() {
   const chips = document.querySelectorAll('.user-chip[data-user="gatochente"]');
   if (!chips.length) return;
@@ -2282,6 +3000,8 @@ initContactForm();
 initProtectedEmailButtons();
 initDonationModal();
 initProjectCards();
+initGatochenteAccount();
+initNews();
 initProfileChips();
 initVerificationBadges();
 initNavFishingCat();

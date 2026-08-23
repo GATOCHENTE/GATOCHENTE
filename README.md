@@ -39,6 +39,7 @@ La web combina una identidad visual propia con una experiencia interactiva: head
 - Pagina de contacto con formulario y enlaces sociales.
 - Modal de donaciones con boton a PayPal web.
 - Pagina de **CatPack**, archivador `.gcat` para Windows.
+- Noticiero/blog con backend opcional en Supabase.
 - Service worker y manifest para comportamiento tipo PWA.
 
 ## Estructura
@@ -51,6 +52,10 @@ La web combina una identidad visual propia con una experiencia interactiva: head
 |-- contacto.html
 |-- catpack/
 |   `-- index.html
+|-- noticias/
+|   `-- index.html
+|-- supabase/
+|   `-- news.sql
 |-- img/
 |-- glyphs/
 |-- logo.png
@@ -58,6 +63,7 @@ La web combina una identidad visual propia con una experiencia interactiva: head
 |-- favicon.png
 |-- manifest.json
 |-- service-worker.js
+|-- supabase-config.js
 |-- script.js
 `-- style.css
 ```
@@ -93,6 +99,46 @@ http://localhost:8000
 - **Sobre mi:** perfil, intereses y habilidades.
 - **Contacto:** formulario y redes.
 - **CatPack:** pagina de producto para el archivador `.gcat`.
+- **Noticias:** noticiero con tarjetas publicas y editor protegido por Supabase Auth + RLS.
+
+## Backend de Noticias
+
+Para activar el noticiero seguro:
+
+1. Crea un proyecto en Supabase.
+2. Activa Auth con email y password.
+3. Crea tu usuario admin.
+4. Ejecuta [`supabase/news.sql`](./supabase/news.sql) en el SQL Editor de Supabase.
+5. En el SQL Editor de Supabase, agrega tu email admin con:
+
+```sql
+insert into private.admin_users (email) values ('tu-email@example.com');
+```
+
+6. Copia el Project URL y la publishable key en [`supabase-config.js`](./supabase-config.js).
+7. Si quieres Face ID/passkey en iPhone, activa Passkeys en Supabase Auth y cambia `enablePasskeys` a `true`.
+
+La seguridad real vive en las politicas RLS de Supabase: visitantes solo leen noticias, y solo los emails guardados en `private.admin_users` pueden crear, editar o eliminar.
+
+El login principal vive en el boton de cuenta del navbar. Supabase mantiene la sesion en el navegador con `persistSession` y `autoRefreshToken`; no se guardan contrasenas en cookies manuales.
+
+Las noticias pueden guardar una imagen adjunta usando Supabase Storage. Ejecuta de nuevo [`supabase/news.sql`](./supabase/news.sql) si ya habias creado la tabla antes de agregar imagenes; el script agrega `image_url` y crea el bucket `gatochente-media`.
+
+Para expandir con imagenes y proyectos editables, ejecuta tambien [`supabase/projects-and-media.sql`](./supabase/projects-and-media.sql). Ese archivo crea:
+
+- `project_posts` para proyectos editables.
+- El bucket publico `gatochente-media` para imagenes.
+- Politicas para que visitantes lean, pero solo el admin suba, edite o elimine.
+
+Para passkeys/WebAuthn usa estos datos en Supabase:
+
+```txt
+RP display name: GATOCHENTE
+RP ID: gatochente.com
+RP origins: https://www.gatochente.com, https://gatochente.com
+```
+
+Nunca pongas la `service_role key` en la web. Solo se usa la publishable key; RLS protege las escrituras.
 
 ## Identidad
 

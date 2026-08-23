@@ -1,4 +1,4 @@
-const CACHE_VERSION = "gatochente-v142";
+const CACHE_VERSION = "gatochente-v157";
 const APP_SHELL_FILES = [
 	"./",
 	"./index.html",
@@ -9,16 +9,20 @@ const APP_SHELL_FILES = [
 	"./proyectos/",
 	"./contacto/",
 	"./catpack/",
+	"./noticias/",
 	"./sobre-mi/index.html",
 	"./proyectos/index.html",
 	"./contacto/index.html",
 	"./catpack/index.html",
+	"./noticias/index.html",
 	"./style.css",
 	"./glyphs/crcglyph.ttf",
 	"./script.js",
+	"./supabase-config.js",
 	"./manifest.json",
 	"./favicon.png",
 	"./logo.png",
+	"./img/banner.jpg",
 	"./img/check.PNG",
 	"./img/catpack-logo.png",
 	"./img/catsocial.PNG",
