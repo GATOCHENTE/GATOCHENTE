@@ -120,11 +120,28 @@ function getGatochenteSupabaseClient() {
   return gatochenteSupabaseClient;
 }
 
+function withTimeout(promise, ms = 15000, message = 'La solicitud tardo demasiado.') {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error(message)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timeoutId));
+}
+
 async function checkGatochenteAdminSession(session) {
   const client = getGatochenteSupabaseClient();
   if (!client || !session) return false;
-  const { data, error } = await client.rpc('is_news_admin');
-  return !error && data === true;
+  try {
+    const { data, error } = await withTimeout(
+      client.rpc('is_news_admin'),
+      10000,
+      'No se pudo confirmar permisos de admin.'
+    );
+    return !error && data === true;
+  } catch (error) {
+    console.error('Admin session check failed:', error);
+    return false;
+  }
 }
 
 function subscribeGatochenteAccount(listener) {
@@ -206,32 +223,45 @@ function initGatochenteAccount() {
     const email = form.querySelector('[data-account-email]');
     const password = form.querySelector('[data-account-password]');
     const message = form.querySelector('[data-account-message]');
+    const submitButton = form.querySelector('button[type="submit"]');
     if (!email || !password) return;
 
+    if (submitButton) submitButton.disabled = true;
     if (message) message.textContent = 'Entrando...';
-    const { error } = await client.auth.signInWithPassword({
-      email: email.value.trim(),
-      password: password.value
-    });
+    try {
+      const { error } = await withTimeout(
+        client.auth.signInWithPassword({
+          email: email.value.trim(),
+          password: password.value
+        }),
+        15000,
+        'Supabase no respondio al iniciar sesion.'
+      );
 
-    if (error) {
+      if (error) {
+        password.value = '';
+        if (message) message.textContent = 'No se pudo iniciar sesion. Revisa email y contrasena.';
+        return;
+      }
+
+      const { data } = await withTimeout(client.auth.getSession(), 10000, 'No se pudo recuperar la sesion.');
+      const isAdmin = await checkGatochenteAdminSession(data.session);
+      if (!isAdmin) {
+        await client.auth.signOut();
+        updateGatochenteAccount({ client, session: null, isAdmin: false });
+        if (message) message.textContent = 'Esta cuenta no tiene permisos.';
+        return;
+      }
+
       password.value = '';
-      if (message) message.textContent = 'No se pudo iniciar sesion.';
-      return;
+      if (message) message.textContent = 'Sesion iniciada.';
+      updateGatochenteAccount({ client, session: data.session, isAdmin: true });
+    } catch (error) {
+      console.error('Account login failed:', error);
+      if (message) message.textContent = error.message || 'No se pudo iniciar sesion.';
+    } finally {
+      if (submitButton) submitButton.disabled = false;
     }
-
-    const { data } = await client.auth.getSession();
-    const isAdmin = await checkGatochenteAdminSession(data.session);
-    if (!isAdmin) {
-      await client.auth.signOut();
-      updateGatochenteAccount({ client, session: null, isAdmin: false });
-      if (message) message.textContent = 'Esta cuenta no tiene permisos.';
-      return;
-    }
-
-    password.value = '';
-    if (message) message.textContent = 'Sesion iniciada.';
-    updateGatochenteAccount({ client, session: data.session, isAdmin: true });
   });
 
   document.addEventListener('click', (event) => {
@@ -1951,33 +1981,46 @@ function initNews() {
       return;
     }
 
+    const submitButton = loginForm.querySelector('button[type="submit"]');
+    if (submitButton) submitButton.disabled = true;
     setStatus('Entrando...');
-    const { error } = await supabaseClient.auth.signInWithPassword({
-      email: emailInput.value.trim(),
-      password: passwordInput.value
-    });
+    try {
+      const { error } = await withTimeout(
+        supabaseClient.auth.signInWithPassword({
+          email: emailInput.value.trim(),
+          password: passwordInput.value
+        }),
+        15000,
+        'Supabase no respondio al iniciar sesion.'
+      );
 
-    if (error) {
+      if (error) {
+        passwordInput.value = '';
+        passwordInput.focus();
+        setStatus('No se pudo iniciar sesion. Revisa email y contrasena.');
+        return;
+      }
+
+      const { data } = await withTimeout(supabaseClient.auth.getSession(), 10000, 'No se pudo recuperar la sesion.');
+      if (!(await checkGatochenteAdminSession(data.session))) {
+        await supabaseClient.auth.signOut();
+        setStatus('Esta cuenta no tiene permisos para editar noticias.');
+        setAdminUnlocked(false);
+        return;
+      }
+
       passwordInput.value = '';
-      passwordInput.focus();
-      setStatus('No se pudo iniciar sesion. Revisa email y contrasena.');
-      return;
+      setStatus('Sesion iniciada.');
+      hasWelcomedSession = true;
+      updateGatochenteAccount({ client: supabaseClient, session: data.session, isAdmin: true });
+      setAdminUnlocked(true, { welcome: true });
+      resetEditor();
+    } catch (error) {
+      console.error('News login failed:', error);
+      setStatus(error.message || 'No se pudo iniciar sesion.');
+    } finally {
+      if (submitButton) submitButton.disabled = false;
     }
-
-    const { data } = await supabaseClient.auth.getSession();
-    if (!(await checkGatochenteAdminSession(data.session))) {
-      await supabaseClient.auth.signOut();
-      setStatus('Esta cuenta no tiene permisos para editar noticias.');
-      setAdminUnlocked(false);
-      return;
-    }
-
-    passwordInput.value = '';
-    setStatus('Sesion iniciada.');
-    hasWelcomedSession = true;
-    updateGatochenteAccount({ client: supabaseClient, session: data.session, isAdmin: true });
-    setAdminUnlocked(true, { welcome: true });
-    resetEditor();
   });
 
   passkeyLoginButton?.addEventListener('click', async () => {
