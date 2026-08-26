@@ -154,19 +154,19 @@ function getPasskeySupport(client = getGatochenteSupabaseClient()) {
 function getPasskeyUnavailableMessage(client = getGatochenteSupabaseClient()) {
   const support = getPasskeySupport(client);
   if (!client) return 'Configura Supabase para activar el login.';
-  if (!support.enabled) return 'Activa passkeys en la configuracion de la web.';
-  if (!window.PublicKeyCredential) return 'Este navegador no soporta passkeys en esta pagina.';
-  return 'El SDK de Supabase cargado no tiene soporte de passkeys. Recarga la pagina.';
+  if (!support.enabled) return 'Activa passkeys en la configuración de la web.';
+  if (!window.PublicKeyCredential) return 'Este navegador no soporta passkeys en esta página.';
+  return 'El SDK de Supabase cargado no tiene soporte de passkeys. Recarga la página.';
 }
 
 function getPasskeyErrorMessage(error, action = 'usar') {
   const code = error?.code || error?.status || '';
   const message = String(error?.message || '').toLowerCase();
   if (code === 'passkey_disabled' || (message.includes('passkey') && message.includes('disabled'))) {
-    return 'Supabase aun dice que Passkeys esta apagado para este proyecto.';
+    return 'Supabase aún dice que Passkeys está apagado para este proyecto.';
   }
   if (code === 'webauthn_credential_not_found') {
-    return 'No existe una passkey registrada. Entra con contrasena y crea una primero.';
+    return 'No existe una passkey registrada. Entra con contraseña y crea una primero.';
   }
   if (code === 'webauthn_credential_exists') {
     return 'Esta passkey ya esta registrada para tu cuenta.';
@@ -222,7 +222,7 @@ function initGatochenteAccount() {
   const accountButton = document.createElement('button');
   accountButton.type = 'button';
   accountButton.className = 'account-nav-button';
-  accountButton.setAttribute('aria-label', 'Iniciar sesion en GATOCHENTE Account');
+  accountButton.setAttribute('aria-label', 'Iniciar sesión en GATOCHENTE Account');
   accountButton.setAttribute('aria-expanded', 'false');
   accountButton.innerHTML = '<span class="account-login-glyph" aria-hidden="true">\uE000</span>';
 
@@ -235,7 +235,7 @@ function initGatochenteAccount() {
       <div>
         <span>GATOCHENTE\u2122 Account</span>
         <strong>@gatochente</strong>
-        <p data-account-status>Inicia sesion para editar</p>
+        <p data-account-status>Inicia sesión para editar</p>
       </div>
     </div>
     <div class="account-nav-actions">
@@ -247,7 +247,7 @@ function initGatochenteAccount() {
     <p class="account-nav-message" data-account-message></p>
     <form class="account-login-form" data-account-login-form>
       <label>Email<input type="email" data-account-email autocomplete="email" required></label>
-      <label>Contrasena<input type="password" data-account-password autocomplete="current-password" required></label>
+      <label>Contraseña<input type="password" data-account-password autocomplete="current-password" required></label>
       <button type="submit">Entrar</button>
     </form>
   `;
@@ -289,7 +289,7 @@ function initGatochenteAccount() {
       return;
     }
 
-    const { data } = await withTimeout(client.auth.getSession(), 10000, 'No se pudo recuperar la sesion.');
+    const { data } = await withTimeout(client.auth.getSession(), 10000, 'No se pudo recuperar la sesión.');
     const isAdmin = await checkGatochenteAdminSession(data.session);
     if (!isAdmin) {
       await client.auth.signOut();
@@ -298,14 +298,14 @@ function initGatochenteAccount() {
       return;
     }
 
-    if (message) message.textContent = 'Sesion iniciada con passkey.';
+    if (message) message.textContent = 'Sesión iniciada con passkey.';
     updateGatochenteAccount({ client, session: data.session, isAdmin: true });
   });
 
   accountMenu.querySelector('[data-account-passkey-register]')?.addEventListener('click', async () => {
     const message = accountMenu.querySelector('[data-account-message]');
     if (!getPasskeySupport(client).canUse || !gatochenteAccount.isAdmin) {
-      if (message) message.textContent = !gatochenteAccount.isAdmin ? 'Primero inicia sesion como admin.' : getPasskeyUnavailableMessage(client);
+      if (message) message.textContent = !gatochenteAccount.isAdmin ? 'Primero inicia sesión como admin.' : getPasskeyUnavailableMessage(client);
       return;
     }
 
@@ -337,16 +337,16 @@ function initGatochenteAccount() {
           password: password.value
         }),
         15000,
-        'Supabase no respondio al iniciar sesion.'
+        'Supabase no respondió al iniciar sesión.'
       );
 
       if (error) {
         password.value = '';
-        if (message) message.textContent = 'No se pudo iniciar sesion. Revisa email y contrasena.';
+        if (message) message.textContent = 'No se pudo iniciar sesión. Revisa email y contraseña.';
         return;
       }
 
-      const { data } = await withTimeout(client.auth.getSession(), 10000, 'No se pudo recuperar la sesion.');
+      const { data } = await withTimeout(client.auth.getSession(), 10000, 'No se pudo recuperar la sesión.');
       const isAdmin = await checkGatochenteAdminSession(data.session);
       if (!isAdmin) {
         await client.auth.signOut();
@@ -356,11 +356,11 @@ function initGatochenteAccount() {
       }
 
       password.value = '';
-      if (message) message.textContent = 'Sesion iniciada.';
+      if (message) message.textContent = 'Sesión iniciada.';
       updateGatochenteAccount({ client, session: data.session, isAdmin: true });
     } catch (error) {
       console.error('Account login failed:', error);
-      if (message) message.textContent = error.message || 'No se pudo iniciar sesion.';
+      if (message) message.textContent = error.message || 'No se pudo iniciar sesión.';
     } finally {
       if (submitButton) submitButton.disabled = false;
     }
@@ -379,7 +379,7 @@ function initGatochenteAccount() {
   subscribeGatochenteAccount(({ isAdmin, session }) => {
     const hasSession = Boolean(session);
     accountButton.classList.toggle('is-logged-in', hasSession);
-    accountButton.setAttribute('aria-label', hasSession ? 'Abrir GATOCHENTE Account' : 'Iniciar sesion en GATOCHENTE Account');
+    accountButton.setAttribute('aria-label', hasSession ? 'Abrir GATOCHENTE Account' : 'Iniciar sesión en GATOCHENTE Account');
     accountButton.innerHTML = hasSession
       ? `<img src="${avatarUrl}" alt="">`
       : '<span class="account-login-glyph" aria-hidden="true">\uE000</span>';
@@ -389,9 +389,9 @@ function initGatochenteAccount() {
     const loginForm = accountMenu.querySelector('[data-account-login-form]');
     const passkeyLogin = accountMenu.querySelector('[data-account-passkey-login]');
     const passkeyRegister = accountMenu.querySelector('[data-account-passkey-register]');
-    if (status) status.textContent = isAdmin ? 'Sesion admin activa' : 'Entra para editar noticias';
+    if (status) status.textContent = isAdmin ? 'Sesión admin activa' : 'Entra para editar noticias';
     if (logout) logout.hidden = !hasSession;
-    if (link) link.textContent = hasSession ? 'Ir a cuenta' : 'Iniciar sesion';
+    if (link) link.textContent = hasSession ? 'Ir a cuenta' : 'Iniciar sesión';
     if (loginForm) loginForm.hidden = hasSession;
     if (passkeyLogin) passkeyLogin.hidden = hasSession || !getPasskeySupport(client).canUse;
     if (passkeyRegister) passkeyRegister.hidden = !isAdmin || !getPasskeySupport(client).canUse;
@@ -489,7 +489,7 @@ const routePages = {
 const routeHashLabels = {
   fishingcat: 'FishingCat',
   catpack: 'CatPack',
-  'bano-ecologico': 'Bano Ecologico',
+  'bano-ecologico': 'Baño Ecológico',
   'paso-peatonal': 'Paso Peatonal',
   'detecta-y-protege': 'Detecta y Protege',
   'version-anterior': 'Versiones Anteriores'
@@ -542,7 +542,7 @@ function renderRouteTab() {
   if (!routeTab) {
     routeTab = document.createElement('nav');
     routeTab.className = 'route-tab';
-    routeTab.setAttribute('aria-label', 'Ruta de navegacion');
+    routeTab.setAttribute('aria-label', 'Ruta de navegación');
     navbar.insertAdjacentElement('beforebegin', routeTab);
   }
 
@@ -758,7 +758,7 @@ const globalSearchIndex = [
     eyebrow: 'Proyecto actual',
     description: 'Red social estilo X/Twitter con límites sanos, temas agradables y comunidad propia.',
     url: '/#current-project-title',
-    keywords: ['catsocial', 'cat social', 'red social', 'twitter', 'x', 'temas', 'limites', 'verificacion', 'beta']
+    keywords: ['catsocial', 'cat social', 'red social', 'twitter', 'x', 'temas', 'límites', 'verificacion', 'beta']
   },
   {
     title: 'FishingCat',
@@ -1748,7 +1748,7 @@ function initProjectPosts() {
         <div class="user-chip" data-user="gatochente">
           <img class="user-avatar" src="${avatarUrl}" alt="Foto de perfil de GATOCHENTE">
           <span class="user-handle">@gatochente</span>
-          <button type="button" class="verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver terminos de la insignia">
+          <button type="button" class="verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver términos de la insignia">
             <img src="${checkBadgeUrl}" alt="Verificado">
           </button>
         </div>
@@ -1793,7 +1793,7 @@ function initProjectPosts() {
           <div class="user-chip" data-user="gatochente">
             <img class="user-avatar" src="${avatarUrl}" alt="Foto de perfil de GATOCHENTE">
             <span class="user-handle">@gatochente</span>
-            <button type="button" class="verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver terminos de la insignia">
+            <button type="button" class="verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver términos de la insignia">
               <img src="${checkBadgeUrl}" alt="Verificado">
             </button>
           </div>
@@ -1905,7 +1905,7 @@ function initProjectPosts() {
         <input type="hidden" data-project-id>
         <label>Titulo<input type="text" data-project-title maxlength="90" required></label>
         <label>Categoria<input type="text" data-project-category maxlength="32" required></label>
-        <label>Ano / estado<input type="text" data-project-year maxlength="32" placeholder="2026 o En desarrollo"></label>
+        <label>Año / estado<input type="text" data-project-year maxlength="32" placeholder="2026 o En desarrollo"></label>
         <label class="wide">Resumen<input type="text" data-project-summary maxlength="220" required></label>
         <label class="wide">Detalle<textarea data-project-body maxlength="1200" required></textarea></label>
         <label class="wide">Tags<input type="text" data-project-tags placeholder="Windows, Arduino, Web"></label>
@@ -2120,11 +2120,11 @@ function initNews() {
   const defaultNews = [
     {
       id: 'catpack-beta',
-      title: 'CatPack Beta ya tiene pagina propia',
+      title: 'CatPack Beta ya tiene página propia',
       category: 'CatPack',
       imageUrl: '',
-      summary: 'El proyecto CatPack suma una presentacion mas clara, versiones y una experiencia visual conectada con el portafolio.',
-      body: 'CatPack sigue creciendo como archivador moderno para Windows. La pagina ahora muestra mejor el estado del proyecto, las versiones y lo que viene despues.',
+      summary: 'El proyecto CatPack suma una presentación más clara, versiones y una experiencia visual conectada con el portafolio.',
+      body: 'CatPack sigue creciendo como archivador moderno para Windows. La página ahora muestra mejor el estado del proyecto, las versiones y lo que viene después.',
       publishedAt: '2026-08-23T12:00:00Z'
     },
     {
@@ -2141,8 +2141,8 @@ function initNews() {
       title: 'FishingCat vive dentro del logo',
       category: 'Juego',
       imageUrl: '',
-      summary: 'El boton del logo une buscador, temas y una demostracion compacta de FishingCat en la navbar.',
-      body: 'El panel del logo mantiene la identidad del sitio y deja jugar una version pequena de FishingCat sin salir de la pagina.',
+      summary: 'El botón del logo une buscador, temas y una demostración compacta de FishingCat en la navbar.',
+      body: 'El panel del logo mantiene la identidad del sitio y deja jugar una versión pequeña de FishingCat sin salir de la página.',
       publishedAt: '2026-08-22T16:00:00Z'
     }
   ];
@@ -2173,18 +2173,18 @@ function initNews() {
   function getPasskeyUnavailableMessage() {
     if (!supabaseClient) return 'Configura supabase-config.js para activar Supabase.';
     if (!passkeysEnabled) return 'Activa enablePasskeys en supabase-config.js.';
-    if (!window.PublicKeyCredential) return 'Este navegador no soporta passkeys/WebAuthn en esta pagina.';
-    return 'El SDK de Supabase cargado no tiene soporte de passkeys. Revisa cache y version del CDN.';
+    if (!window.PublicKeyCredential) return 'Este navegador no soporta passkeys/WebAuthn en esta página.';
+    return 'El SDK de Supabase cargado no tiene soporte de passkeys. Revisa cache y versión del CDN.';
   }
 
   function getPasskeyErrorMessage(error, action = 'usar') {
     const code = error?.code || error?.status || '';
     const message = String(error?.message || '').toLowerCase();
     if (code === 'passkey_disabled' || (message.includes('passkey') && message.includes('disabled'))) {
-      return 'Supabase aun dice que Passkeys esta apagado para este proyecto.';
+      return 'Supabase aún dice que Passkeys está apagado para este proyecto.';
     }
     if (code === 'webauthn_credential_not_found') {
-      return 'No existe una passkey registrada para esta cuenta. Entra con contrasena y crea una primero.';
+      return 'No existe una passkey registrada para esta cuenta. Entra con contraseña y crea una primero.';
     }
     if (code === 'webauthn_credential_exists') {
       return 'Esta passkey ya esta registrada para tu cuenta.';
@@ -2223,7 +2223,7 @@ function initNews() {
     if (accountPanel) accountPanel.hidden = !value;
     if (accountPanel) accountPanel.classList.toggle('is-welcoming', Boolean(value && options.welcome));
     if (registerPasskeyButton) registerPasskeyButton.hidden = !value || !canUsePasskeys;
-    if (!value && authStatus) authStatus.textContent = 'Usa el boton de cuenta del navbar para iniciar sesion.';
+    if (!value && authStatus) authStatus.textContent = 'Usa el botón de cuenta del navbar para iniciar sesión.';
     renderNews();
   }
 
@@ -2282,7 +2282,7 @@ function initNews() {
         <div class="user-chip user-chip-compact" data-user="gatochente">
           <img class="user-avatar" src="${avatarUrl}" alt="Foto de perfil de GATOCHENTE">
           <span class="user-handle">@gatochente</span>
-          <button type="button" class="verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver terminos de la insignia">
+          <button type="button" class="verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver términos de la insignia">
             <img src="${checkBadgeUrl}" alt="Verificado">
           </button>
         </div>
@@ -2303,7 +2303,7 @@ function initNews() {
     if (!items.length) {
       const empty = document.createElement('p');
       empty.className = 'news-empty';
-      empty.textContent = 'Todavia no hay noticias publicadas.';
+      empty.textContent = 'Todavía no hay noticias publicadas.';
       container.appendChild(empty);
       return;
     }
@@ -2415,7 +2415,7 @@ function initNews() {
     if (!emailInput || !passwordInput) return;
     const globalClient = gatochenteAccount.client || supabaseClient;
     if (globalClient) {
-      setStatus('Tambien puedes entrar desde el boton de cuenta del navbar.');
+      setStatus('También puedes entrar desde el botón de cuenta del navbar.');
     }
     if (!supabaseClient) {
       setStatus('Configura supabase-config.js para activar el login seguro.');
@@ -2432,17 +2432,17 @@ function initNews() {
           password: passwordInput.value
         }),
         15000,
-        'Supabase no respondio al iniciar sesion.'
+        'Supabase no respondió al iniciar sesión.'
       );
 
       if (error) {
         passwordInput.value = '';
         passwordInput.focus();
-        setStatus('No se pudo iniciar sesion. Revisa email y contrasena.');
+        setStatus('No se pudo iniciar sesión. Revisa email y contraseña.');
         return;
       }
 
-      const { data } = await withTimeout(supabaseClient.auth.getSession(), 10000, 'No se pudo recuperar la sesion.');
+      const { data } = await withTimeout(supabaseClient.auth.getSession(), 10000, 'No se pudo recuperar la sesión.');
       if (!(await checkGatochenteAdminSession(data.session))) {
         await supabaseClient.auth.signOut();
         setStatus('Esta cuenta no tiene permisos para editar noticias.');
@@ -2451,14 +2451,14 @@ function initNews() {
       }
 
       passwordInput.value = '';
-      setStatus('Sesion iniciada.');
+      setStatus('Sesión iniciada.');
       hasWelcomedSession = true;
       updateGatochenteAccount({ client: supabaseClient, session: data.session, isAdmin: true });
       setAdminUnlocked(true, { welcome: true });
       resetEditor();
     } catch (error) {
       console.error('News login failed:', error);
-      setStatus(error.message || 'No se pudo iniciar sesion.');
+      setStatus(error.message || 'No se pudo iniciar sesión.');
     } finally {
       if (submitButton) submitButton.disabled = false;
     }
@@ -2490,7 +2490,7 @@ function initNews() {
       return;
     }
 
-    setStatus('Sesion iniciada con passkey.');
+    setStatus('Sesión iniciada con passkey.');
     hasWelcomedSession = true;
     updateGatochenteAccount({ client: supabaseClient, session: data.session, isAdmin: true });
     setAdminUnlocked(true, { welcome: true });
@@ -2571,7 +2571,7 @@ function initNews() {
     imageDropzone.classList.remove('is-dragging');
     const file = event.dataTransfer?.files?.[0];
     if (!file || !file.type.startsWith('image/')) {
-      setStatus('Solo puedes adjuntar imagenes.');
+      setStatus('Solo puedes adjuntar imágenes.');
       return;
     }
     setImageFile(file);
@@ -2641,7 +2641,7 @@ function initNews() {
 
   logoutButton?.addEventListener('click', async () => {
     if (supabaseClient) await supabaseClient.auth.signOut();
-    setStatus('Sesion cerrada.');
+    setStatus('Sesión cerrada.');
     updateGatochenteAccount({ client: supabaseClient, session: null, isAdmin: false });
     setAdminUnlocked(false);
     resetEditor();
@@ -2725,7 +2725,7 @@ function initProfileChips() {
         </div>
       </div>
       <p class="profile-bio">
-        Estudiante creador de proyectos con tecnologia, programacion, Arduino, Raspberry Pi y diseno web. Aqui se conectan mis prototipos, ideas escolares y futuras experiencias sociales.
+        Estudiante creador de proyectos con tecnología, programación, Arduino, Raspberry Pi y diseño web. Aquí se conectan mis prototipos, ideas escolares y futuras experiencias sociales.
       </p>
       <div class="profile-stats" aria-label="Resumen del perfil">
         <div>
