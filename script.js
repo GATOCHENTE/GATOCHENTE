@@ -1903,8 +1903,8 @@ function initProjectPosts() {
       <p class="project-admin-status" data-project-status></p>
       <form class="project-editor-form" data-project-form hidden>
         <input type="hidden" data-project-id>
-        <label>Titulo<input type="text" data-project-title maxlength="90" required></label>
-        <label>Categoria<input type="text" data-project-category maxlength="32" required></label>
+        <label>Título<input type="text" data-project-title maxlength="90" required></label>
+        <label>Categoría<input type="text" data-project-category maxlength="32" required></label>
         <label>Año / estado<input type="text" data-project-year maxlength="32" placeholder="2026 o En desarrollo"></label>
         <label class="wide">Resumen<input type="text" data-project-summary maxlength="220" required></label>
         <label class="wide">Detalle<textarea data-project-body maxlength="1200" required></textarea></label>
@@ -1974,7 +1974,7 @@ function initProjectPosts() {
         : client.from('project_posts').insert(payload);
       const { error } = await request;
       if (error) {
-        statusText.textContent = 'Supabase rechazo el proyecto. Revisa RLS o la tabla project_posts.';
+        statusText.textContent = 'Supabase rechazó el proyecto. Revisa RLS o la tabla project_posts.';
         return;
       }
       statusText.textContent = 'Proyecto guardado.';
@@ -2613,7 +2613,7 @@ function initNews() {
 
     const { error } = await request;
     if (error) {
-      setStatus('Supabase rechazo el cambio. Revisa que tu email sea el admin en RLS.');
+      setStatus('Supabase rechazó el cambio. Revisa que tu email sea el admin en RLS.');
       return;
     }
 

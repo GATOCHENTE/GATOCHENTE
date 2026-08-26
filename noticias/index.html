@@ -25,7 +25,7 @@
 (function(){try{var preference=localStorage.getItem('gatochente_theme_preference')||'auto';var dark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;var theme=preference==='dark'||(preference==='auto'&&dark)?'dark':'light';document.documentElement.dataset.themePreference=preference;document.documentElement.dataset.theme=theme;}catch(e){}})();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../style.css?v=20260826-orthography">
+<link rel="stylesheet" href="../style.css?v=20260826-review-polish">
 </head>
 <body>
 <div class="page-loader" id="page-loader" role="status" aria-live="polite" aria-label="Cargando GATOCHENTE">
@@ -101,8 +101,8 @@
 </div>
 <form class="news-editor-form" id="news-editor-form" hidden>
 <input type="hidden" id="news-id">
-<label>Titulo<input type="text" id="news-title-input" maxlength="80" required></label>
-<label>Categoria<input type="text" id="news-category-input" maxlength="28" required></label>
+<label>Título<input type="text" id="news-title-input" maxlength="80" required></label>
+<label>Categoría<input type="text" id="news-category-input" maxlength="28" required></label>
 <label class="wide">Resumen<input type="text" id="news-summary-input" maxlength="170" required></label>
 <label class="wide">Contenido<textarea id="news-body-input" maxlength="900" required></textarea></label>
 <label class="wide news-file-label">Imagen</label>
@@ -141,7 +141,7 @@
 <p id="year" class="footer-copy"></p>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.0"></script>
-<script src="../supabase-config.js?v=20260826-orthography"></script>
-<script src="../script.js?v=20260826-orthography"></script>
+<script src="../supabase-config.js?v=20260826-review-polish"></script>
+<script src="../script.js?v=20260826-review-polish"></script>
 </body>
 </html>
