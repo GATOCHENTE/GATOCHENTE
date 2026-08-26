@@ -25,7 +25,7 @@
 (function(){try{var preference=localStorage.getItem('gatochente_theme_preference')||'auto';var dark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;var theme=preference==='dark'||(preference==='auto'&&dark)?'dark':'light';document.documentElement.dataset.themePreference=preference;document.documentElement.dataset.theme=theme;}catch(e){}})();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../style.css?v=20260826-portrait-nav-peek">
+<link rel="stylesheet" href="../style.css?v=20260826-account-projects">
 </head>
 <body>
 <div class="page-loader" id="page-loader" role="status" aria-live="polite" aria-label="Cargando GATOCHENTE">
@@ -79,15 +79,12 @@
 </button>
 </div>
 <div class="news-admin-panel" id="news-admin-panel" aria-hidden="true">
-<form class="news-login-form" id="news-login-form">
-<label>Email admin<input type="email" id="news-email-input" autocomplete="email" required></label>
-<label>Contraseña<input type="password" id="news-password-input" autocomplete="current-password" required></label>
+<div class="news-login-form" id="news-login-form">
+<strong>Inicia sesion desde el boton de cuenta del navbar.</strong>
+<span>Cuando tu sesion admin este activa, este panel mostrara las herramientas para redactar y editar noticias.</span>
 <p class="news-auth-status" id="news-auth-status" aria-live="polite"></p>
-<div class="news-editor-actions">
-<button type="button" class="news-cancel" id="news-passkey-login-button" hidden>Entrar con passkey</button>
-<button type="submit" class="news-submit">Entrar</button>
+<button type="button" class="news-submit" id="news-open-account-button">Abrir cuenta</button>
 </div>
-</form>
 <div class="news-account-panel" id="news-account-panel" hidden>
 <div class="news-account-card">
 <img src="../img/gatochente.jpg" alt="Foto de perfil de GATOCHENTE" class="news-account-avatar">
@@ -99,7 +96,7 @@
 </div>
 <div class="news-account-actions">
 <button type="button" class="news-submit" id="news-compose-button">Redactar noticia</button>
-<button type="button" class="news-cancel" id="news-projects-admin-button" disabled>Editar proyectos pronto</button>
+<a class="news-cancel" id="news-projects-admin-button" href="/proyectos">Editar proyectos</a>
 </div>
 </div>
 <form class="news-editor-form" id="news-editor-form" hidden>
@@ -144,7 +141,7 @@
 <p id="year" class="footer-copy"></p>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.0"></script>
-<script src="../supabase-config.js?v=20260826-portrait-nav-peek"></script>
-<script src="../script.js?v=20260826-portrait-nav-peek"></script>
+<script src="../supabase-config.js?v=20260826-account-projects"></script>
+<script src="../script.js?v=20260826-account-projects"></script>
 </body>
 </html>

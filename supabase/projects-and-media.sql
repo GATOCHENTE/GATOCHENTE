@@ -9,9 +9,13 @@ create table if not exists public.project_posts (
   body text not null check (char_length(body) between 1 and 1200),
   image_url text,
   project_year text,
+  tags text[] not null default '{}',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.project_posts
+add column if not exists tags text[] not null default '{}';
 
 alter table public.project_posts enable row level security;
 

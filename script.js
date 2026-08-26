@@ -128,6 +128,61 @@ function withTimeout(promise, ms = 15000, message = 'La solicitud tardo demasiad
   return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timeoutId));
 }
 
+function escapeHtmlValue(value) {
+  return String(value || '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  }[char]));
+}
+
+function getPasskeySupport(client = getGatochenteSupabaseClient()) {
+  const config = window.GATOCHENTE_SUPABASE || {};
+  return {
+    enabled: Boolean(config.enablePasskeys),
+    canUse: Boolean(
+      config.enablePasskeys &&
+      client?.auth?.signInWithPasskey &&
+      client?.auth?.registerPasskey &&
+      window.PublicKeyCredential
+    )
+  };
+}
+
+function getPasskeyUnavailableMessage(client = getGatochenteSupabaseClient()) {
+  const support = getPasskeySupport(client);
+  if (!client) return 'Configura Supabase para activar el login.';
+  if (!support.enabled) return 'Activa passkeys en la configuracion de la web.';
+  if (!window.PublicKeyCredential) return 'Este navegador no soporta passkeys en esta pagina.';
+  return 'El SDK de Supabase cargado no tiene soporte de passkeys. Recarga la pagina.';
+}
+
+function getPasskeyErrorMessage(error, action = 'usar') {
+  const code = error?.code || error?.status || '';
+  const message = String(error?.message || '').toLowerCase();
+  if (code === 'passkey_disabled' || (message.includes('passkey') && message.includes('disabled'))) {
+    return 'Supabase aun dice que Passkeys esta apagado para este proyecto.';
+  }
+  if (code === 'webauthn_credential_not_found') {
+    return 'No existe una passkey registrada. Entra con contrasena y crea una primero.';
+  }
+  if (code === 'webauthn_credential_exists') {
+    return 'Esta passkey ya esta registrada para tu cuenta.';
+  }
+  if (code === 'email_not_confirmed') {
+    return 'Tu email debe estar confirmado antes de usar passkey.';
+  }
+  if (message.includes('origin') || message.includes('rp id') || message.includes('relying party')) {
+    return 'El dominio WebAuthn no coincide. Revisa RP ID y origins en Supabase.';
+  }
+  if (message.includes('cancel') || message.includes('notallowed')) {
+    return 'La passkey se cancelo o el navegador no permitio abrirla.';
+  }
+  return `No se pudo ${action} la passkey. Revisa Supabase Passkeys.`;
+}
+
 async function checkGatochenteAdminSession(session) {
   const client = getGatochenteSupabaseClient();
   if (!client || !session) return false;
@@ -185,12 +240,14 @@ function initGatochenteAccount() {
     </div>
     <div class="account-nav-actions">
       <a href="/noticias" data-account-link>Ir a cuenta</a>
+      <button type="button" data-account-passkey-login>Passkey</button>
+      <button type="button" data-account-passkey-register hidden>Crear passkey</button>
       <button type="button" data-account-logout hidden>Salir</button>
     </div>
+    <p class="account-nav-message" data-account-message></p>
     <form class="account-login-form" data-account-login-form>
       <label>Email<input type="email" data-account-email autocomplete="email" required></label>
       <label>Contrasena<input type="password" data-account-password autocomplete="current-password" required></label>
-      <p data-account-message></p>
       <button type="submit">Entrar</button>
     </form>
   `;
@@ -217,12 +274,57 @@ function initGatochenteAccount() {
     closeMenu();
   });
 
+  accountMenu.querySelector('[data-account-passkey-login]')?.addEventListener('click', async () => {
+    const message = accountMenu.querySelector('[data-account-message]');
+    if (!getPasskeySupport(client).canUse) {
+      if (message) message.textContent = getPasskeyUnavailableMessage(client);
+      return;
+    }
+
+    if (message) message.textContent = 'Abriendo passkey...';
+    const { error } = await client.auth.signInWithPasskey();
+    if (error) {
+      console.error('Account passkey login failed:', error);
+      if (message) message.textContent = getPasskeyErrorMessage(error, 'entrar con');
+      return;
+    }
+
+    const { data } = await withTimeout(client.auth.getSession(), 10000, 'No se pudo recuperar la sesion.');
+    const isAdmin = await checkGatochenteAdminSession(data.session);
+    if (!isAdmin) {
+      await client.auth.signOut();
+      updateGatochenteAccount({ client, session: null, isAdmin: false });
+      if (message) message.textContent = 'Esta passkey no tiene permisos.';
+      return;
+    }
+
+    if (message) message.textContent = 'Sesion iniciada con passkey.';
+    updateGatochenteAccount({ client, session: data.session, isAdmin: true });
+  });
+
+  accountMenu.querySelector('[data-account-passkey-register]')?.addEventListener('click', async () => {
+    const message = accountMenu.querySelector('[data-account-message]');
+    if (!getPasskeySupport(client).canUse || !gatochenteAccount.isAdmin) {
+      if (message) message.textContent = !gatochenteAccount.isAdmin ? 'Primero inicia sesion como admin.' : getPasskeyUnavailableMessage(client);
+      return;
+    }
+
+    if (message) message.textContent = 'Creando passkey...';
+    const { error } = await client.auth.registerPasskey();
+    if (error) {
+      console.error('Account passkey registration failed:', error);
+      if (message) message.textContent = getPasskeyErrorMessage(error, 'crear');
+      return;
+    }
+    if (message) message.textContent = 'Passkey creada para esta cuenta.';
+  });
+
   accountMenu.querySelector('[data-account-login-form]')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
     const email = form.querySelector('[data-account-email]');
     const password = form.querySelector('[data-account-password]');
-    const message = form.querySelector('[data-account-message]');
+    const message = accountMenu.querySelector('[data-account-message]');
     const submitButton = form.querySelector('button[type="submit"]');
     if (!email || !password) return;
 
@@ -285,10 +387,14 @@ function initGatochenteAccount() {
     const logout = accountMenu.querySelector('[data-account-logout]');
     const link = accountMenu.querySelector('[data-account-link]');
     const loginForm = accountMenu.querySelector('[data-account-login-form]');
+    const passkeyLogin = accountMenu.querySelector('[data-account-passkey-login]');
+    const passkeyRegister = accountMenu.querySelector('[data-account-passkey-register]');
     if (status) status.textContent = isAdmin ? 'Sesion admin activa' : 'Entra para editar noticias';
     if (logout) logout.hidden = !hasSession;
     if (link) link.textContent = hasSession ? 'Ir a cuenta' : 'Iniciar sesion';
     if (loginForm) loginForm.hidden = hasSession;
+    if (passkeyLogin) passkeyLogin.hidden = hasSession || !getPasskeySupport(client).canUse;
+    if (passkeyRegister) passkeyRegister.hidden = !isAdmin || !getPasskeySupport(client).canUse;
   });
 
   client.auth.onAuthStateChange(async (_event, session) => {
@@ -718,6 +824,13 @@ const globalSearchIndex = [
     keywords: ['contacto', 'email', 'correo', 'github', 'youtube', 'mensaje']
   }
 ];
+
+function replaceDynamicSearchItems(source, items) {
+  for (let index = globalSearchIndex.length - 1; index >= 0; index -= 1) {
+    if (globalSearchIndex[index].source === source) globalSearchIndex.splice(index, 1);
+  }
+  globalSearchIndex.push(...items.map((item) => ({ ...item, source })));
+}
 
 let searchResultsPanel = null;
 let searchResultsList = null;
@@ -1426,8 +1539,12 @@ function initProtectedEmailButtons() {
 }
 
 function initProjectCards() {
-  const projectCards = [...document.querySelectorAll('.projects .card[id]')];
-  if (!projectCards.length) return;
+  const projectsSection = document.querySelector('.projects');
+  if (!projectsSection) return;
+
+  function getProjectCards() {
+    return [...projectsSection.querySelectorAll('.card[id]')];
+  }
 
   const modal = document.createElement('div');
   modal.className = 'project-modal';
@@ -1530,21 +1647,29 @@ function initProjectCards() {
     document.body.classList.remove('modal-open');
   }
 
-  projectCards.forEach((card) => {
+  function prepareProjectCard(card) {
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
     card.setAttribute('aria-label', `Ver proyecto ${card.querySelector('h3')?.textContent.trim() || ''}`);
+  }
 
-    card.addEventListener('click', (event) => {
-      if (event.target instanceof Element && event.target.closest('button,a,.user-chip')) return;
-      openProject(card);
-    });
+  getProjectCards().forEach(prepareProjectCard);
 
-    card.addEventListener('keydown', (event) => {
-      if (event.key !== 'Enter' && event.key !== ' ') return;
-      event.preventDefault();
-      openProject(card);
-    });
+  projectsSection.addEventListener('click', (event) => {
+    if (event.target instanceof Element && event.target.closest('button,a,.user-chip')) return;
+    const card = event.target instanceof Element ? event.target.closest('.card[id]') : null;
+    if (!card || !projectsSection.contains(card)) return;
+    prepareProjectCard(card);
+    openProject(card);
+  });
+
+  projectsSection.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const card = event.target instanceof Element ? event.target.closest('.card[id]') : null;
+    if (!card || !projectsSection.contains(card)) return;
+    event.preventDefault();
+    prepareProjectCard(card);
+    openProject(card);
   });
 
   closeButton.addEventListener('click', closeProject);
@@ -1561,7 +1686,7 @@ function initProjectCards() {
   function openProjectFromHash() {
     const hash = window.location.hash.replace('#', '');
     if (!hash) return;
-    const targetCard = projectCards.find((card) => card.id === hash);
+    const targetCard = getProjectCards().find((card) => card.id === hash);
     if (targetCard) {
       window.setTimeout(() => openProject(targetCard, false), 180);
     }
@@ -1569,6 +1694,312 @@ function initProjectCards() {
 
   openProjectFromHash();
   window.addEventListener('hashchange', openProjectFromHash);
+  document.addEventListener('gatochente:projects-rendered', () => {
+    getProjectCards().forEach(prepareProjectCard);
+  });
+}
+
+function initProjectPosts() {
+  const projectsSection = document.querySelector('.projects');
+  const featuredGrid = document.querySelector('.featured-grid');
+  if (!projectsSection && !featuredGrid) return;
+
+  const client = getGatochenteSupabaseClient();
+  const scriptElement = document.querySelector('script[src*="script.js"]');
+  const assetBase = scriptElement ? scriptElement.src : window.location.href;
+  const avatarUrl = new URL('img/gatochente.jpg', assetBase).href;
+  const checkBadgeUrl = new URL('img/check.PNG', assetBase).href;
+  const fallbackImage = new URL('img/proyecto2.jpg', assetBase).href;
+  let projectItems = [];
+  let isAdmin = false;
+  let selectedProjectImage = null;
+  let adminPanel = null;
+  let editorForm = null;
+  let statusText = null;
+
+  function slugify(value) {
+    return String(value || 'proyecto')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 48) || 'proyecto';
+  }
+
+  function normalizeProject(post) {
+    return {
+      id: post.id,
+      slug: `proyecto-${slugify(post.title)}-${String(post.id || '').slice(0, 8)}`,
+      title: post.title || 'Proyecto sin titulo',
+      category: post.category || 'Proyecto',
+      summary: post.summary || '',
+      body: post.body || post.summary || '',
+      imageUrl: post.image_url || '',
+      projectYear: post.project_year || 'En desarrollo',
+      tags: Array.isArray(post.tags) ? post.tags : []
+    };
+  }
+
+  function collaboratorMarkup() {
+    return `
+      <div class="project-collaborators" aria-label="Colaboradores del proyecto">
+        <span class="collaborators-label">Colaborador</span>
+        <div class="user-chip" data-user="gatochente">
+          <img class="user-avatar" src="${avatarUrl}" alt="Foto de perfil de GATOCHENTE">
+          <span class="user-handle">@gatochente</span>
+          <button type="button" class="verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver terminos de la insignia">
+            <img src="${checkBadgeUrl}" alt="Verificado">
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function createProjectCard(item, index) {
+    const article = document.createElement('article');
+    article.className = index === 0 ? 'card project-featured project-dynamic-card' : 'card project-dynamic-card';
+    article.id = item.slug;
+    article.dataset.projectId = item.id;
+    article.innerHTML = `
+      ${index === 0 ? '<span class="project-recent-label">Proyecto reciente</span>' : ''}
+      <button type="button" class="project-edit-button" data-project-edit="${escapeHtmlValue(item.id)}" aria-label="Editar proyecto">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+      </button>
+      <img src="${escapeHtmlValue(item.imageUrl || fallbackImage)}" alt="">
+      <p class="card-kicker">${escapeHtmlValue(item.category)} · ${escapeHtmlValue(item.projectYear)}</p>
+      <h3>${escapeHtmlValue(item.title)}</h3>
+      <p>${escapeHtmlValue(item.summary)}</p>
+      <div class="project-notes"><p>${escapeHtmlValue(item.body)}</p></div>
+      <div class="card-tags">
+        ${(item.tags.length ? item.tags : [item.category]).map((tag) => `<span>${escapeHtmlValue(tag)}</span>`).join('')}
+      </div>
+      ${collaboratorMarkup()}
+    `;
+    return article;
+  }
+
+  function createFeaturedProject(item) {
+    const article = document.createElement('article');
+    article.className = 'featured-card featured-dynamic-card';
+    article.innerHTML = `
+      <img src="${escapeHtmlValue(item.imageUrl || fallbackImage)}" alt="">
+      <div>
+        <p class="project-year">${escapeHtmlValue(item.projectYear)}</p>
+        <h3>${escapeHtmlValue(item.title)}</h3>
+        <p>${escapeHtmlValue(item.summary)}</p>
+        <div class="featured-collaborators" aria-label="Colaboradores del proyecto">
+          <span class="collaborators-label">Colaborador</span>
+          <div class="user-chip" data-user="gatochente">
+            <img class="user-avatar" src="${avatarUrl}" alt="Foto de perfil de GATOCHENTE">
+            <span class="user-handle">@gatochente</span>
+            <button type="button" class="verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver terminos de la insignia">
+              <img src="${checkBadgeUrl}" alt="Verificado">
+            </button>
+          </div>
+        </div>
+        <a href="/proyectos#${escapeHtmlValue(item.slug)}">Ver detalles</a>
+      </div>
+    `;
+    return article;
+  }
+
+  function renderProjects() {
+    replaceDynamicSearchItems('projects', projectItems.map((item) => ({
+      title: item.title,
+      eyebrow: item.category,
+      description: item.summary,
+      url: `/proyectos#${item.slug}`,
+      keywords: [item.projectYear, item.category, ...item.tags]
+    })));
+
+    if (projectsSection) {
+      projectsSection.querySelectorAll('.project-dynamic-card').forEach((card) => card.remove());
+      const anchor = adminPanel?.nextElementSibling || projectsSection.querySelector('.projects-heading')?.nextElementSibling || null;
+      projectItems.forEach((item, index) => {
+        projectsSection.insertBefore(createProjectCard(item, index), anchor);
+      });
+      document.dispatchEvent(new CustomEvent('gatochente:projects-rendered'));
+    }
+
+    if (featuredGrid) {
+      featuredGrid.querySelectorAll('.featured-dynamic-card').forEach((card) => card.remove());
+      [...projectItems].slice(0, 2).reverse().forEach((item) => {
+        featuredGrid.prepend(createFeaturedProject(item));
+      });
+    }
+
+    document.body.classList.toggle('projects-admin-active', isAdmin);
+  }
+
+  async function loadProjects() {
+    if (!client) {
+      renderProjects();
+      return;
+    }
+    const { data, error } = await client
+      .from('project_posts')
+      .select('id,title,category,summary,body,image_url,project_year,tags,created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      if (statusText) statusText.textContent = 'No se pudo cargar project_posts. Ejecuta supabase/projects-and-media.sql.';
+      renderProjects();
+      return;
+    }
+
+    projectItems = (data || []).map(normalizeProject);
+    renderProjects();
+  }
+
+  async function uploadProjectImage(file) {
+    if (!file || !client) return '';
+    const extension = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+    const filePath = `projects/${Date.now()}-${Math.random().toString(16).slice(2)}.${extension}`;
+    const { error } = await client.storage.from('gatochente-media').upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
+    if (error) throw error;
+    const { data } = client.storage.from('gatochente-media').getPublicUrl(filePath);
+    return data.publicUrl;
+  }
+
+  function resetProjectEditor() {
+    if (!editorForm) return;
+    editorForm.reset();
+    selectedProjectImage = null;
+    editorForm.querySelector('[data-project-id]').value = '';
+    editorForm.hidden = true;
+  }
+
+  function openProjectEditor(item = null) {
+    if (!editorForm || !isAdmin) return;
+    editorForm.hidden = false;
+    editorForm.querySelector('[data-project-id]').value = item?.id || '';
+    editorForm.querySelector('[data-project-title]').value = item?.title || '';
+    editorForm.querySelector('[data-project-category]').value = item?.category || '';
+    editorForm.querySelector('[data-project-year]').value = item?.projectYear || '';
+    editorForm.querySelector('[data-project-summary]').value = item?.summary || '';
+    editorForm.querySelector('[data-project-body]').value = item?.body || '';
+    editorForm.querySelector('[data-project-tags]').value = item?.tags?.join(', ') || '';
+    editorForm.querySelector('[data-project-delete]').hidden = !item;
+    editorForm.querySelector('[data-project-title]').focus();
+  }
+
+  function buildAdminPanel() {
+    if (!projectsSection || adminPanel) return;
+    adminPanel = document.createElement('div');
+    adminPanel.className = 'project-admin-panel';
+    adminPanel.hidden = true;
+    adminPanel.innerHTML = `
+      <div class="project-admin-head">
+        <div>
+          <span>GATOCHENTE Account</span>
+          <strong>Editor de proyectos</strong>
+        </div>
+        <button type="button" class="news-submit" data-project-compose>Agregar proyecto</button>
+      </div>
+      <p class="project-admin-status" data-project-status></p>
+      <form class="project-editor-form" data-project-form hidden>
+        <input type="hidden" data-project-id>
+        <label>Titulo<input type="text" data-project-title maxlength="90" required></label>
+        <label>Categoria<input type="text" data-project-category maxlength="32" required></label>
+        <label>Ano / estado<input type="text" data-project-year maxlength="32" placeholder="2026 o En desarrollo"></label>
+        <label class="wide">Resumen<input type="text" data-project-summary maxlength="220" required></label>
+        <label class="wide">Detalle<textarea data-project-body maxlength="1200" required></textarea></label>
+        <label class="wide">Tags<input type="text" data-project-tags placeholder="Windows, Arduino, Web"></label>
+        <label class="wide news-file-label">Imagen<input type="file" data-project-image accept="image/png,image/jpeg,image/webp,image/gif"></label>
+        <div class="news-editor-actions">
+          <button type="button" class="news-delete" data-project-delete hidden>Eliminar</button>
+          <button type="button" class="news-cancel" data-project-cancel>Cancelar</button>
+          <button type="submit" class="news-submit">Guardar proyecto</button>
+        </div>
+      </form>
+    `;
+    projectsSection.insertBefore(adminPanel, projectsSection.querySelector('.projects-heading')?.nextElementSibling || null);
+    statusText = adminPanel.querySelector('[data-project-status]');
+    editorForm = adminPanel.querySelector('[data-project-form]');
+
+    adminPanel.querySelector('[data-project-compose]')?.addEventListener('click', () => openProjectEditor());
+    adminPanel.querySelector('[data-project-cancel]')?.addEventListener('click', resetProjectEditor);
+    adminPanel.querySelector('[data-project-image]')?.addEventListener('change', (event) => {
+      selectedProjectImage = event.currentTarget.files?.[0] || null;
+    });
+    adminPanel.querySelector('[data-project-delete]')?.addEventListener('click', async () => {
+      const id = editorForm?.querySelector('[data-project-id]').value;
+      if (!id || !client || !isAdmin) return;
+      const { error } = await client.from('project_posts').delete().eq('id', id);
+      if (error) {
+        statusText.textContent = 'No se pudo eliminar el proyecto.';
+        return;
+      }
+      statusText.textContent = 'Proyecto eliminado.';
+      resetProjectEditor();
+      await loadProjects();
+    });
+
+    editorForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!client || !isAdmin) return;
+      const id = editorForm.querySelector('[data-project-id]').value;
+      const existing = projectItems.find((item) => item.id === id);
+      let imageUrl = existing?.imageUrl || '';
+      try {
+        if (selectedProjectImage) {
+          statusText.textContent = 'Subiendo imagen...';
+          imageUrl = await uploadProjectImage(selectedProjectImage);
+        }
+      } catch {
+        statusText.textContent = 'No se pudo subir la imagen.';
+        return;
+      }
+
+      const tags = editorForm.querySelector('[data-project-tags]').value
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+        .slice(0, 8);
+      const payload = {
+        title: editorForm.querySelector('[data-project-title]').value.trim(),
+        category: editorForm.querySelector('[data-project-category]').value.trim(),
+        project_year: editorForm.querySelector('[data-project-year]').value.trim() || 'En desarrollo',
+        summary: editorForm.querySelector('[data-project-summary]').value.trim(),
+        body: editorForm.querySelector('[data-project-body]').value.trim(),
+        image_url: imageUrl || null,
+        tags
+      };
+      const request = id
+        ? client.from('project_posts').update(payload).eq('id', id)
+        : client.from('project_posts').insert(payload);
+      const { error } = await request;
+      if (error) {
+        statusText.textContent = 'Supabase rechazo el proyecto. Revisa RLS o la tabla project_posts.';
+        return;
+      }
+      statusText.textContent = 'Proyecto guardado.';
+      resetProjectEditor();
+      await loadProjects();
+    });
+  }
+
+  buildAdminPanel();
+
+  projectsSection?.addEventListener('click', (event) => {
+    const button = event.target instanceof Element ? event.target.closest('[data-project-edit]') : null;
+    if (!button || !isAdmin) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openProjectEditor(projectItems.find((item) => item.id === button.dataset.projectEdit));
+  });
+
+  subscribeGatochenteAccount(({ isAdmin: nextIsAdmin }) => {
+    isAdmin = Boolean(nextIsAdmin);
+    if (adminPanel) adminPanel.hidden = !isAdmin;
+    document.body.classList.toggle('projects-admin-active', isAdmin);
+  });
+
+  loadProjects();
 }
 
 function initVerificationBadges() {
@@ -1682,6 +2113,7 @@ function initNews() {
   const registerPasskeyButton = document.getElementById('news-register-passkey-button');
   const accountPanel = document.getElementById('news-account-panel');
   const composeButton = document.getElementById('news-compose-button');
+  const openAccountButton = document.getElementById('news-open-account-button');
 
   if (!homeGrid && !newsGrid) return;
 
@@ -1791,6 +2223,7 @@ function initNews() {
     if (accountPanel) accountPanel.hidden = !value;
     if (accountPanel) accountPanel.classList.toggle('is-welcoming', Boolean(value && options.welcome));
     if (registerPasskeyButton) registerPasskeyButton.hidden = !value || !canUsePasskeys;
+    if (!value && authStatus) authStatus.textContent = 'Usa el boton de cuenta del navbar para iniciar sesion.';
     renderNews();
   }
 
@@ -1879,6 +2312,13 @@ function initNews() {
 
   function renderNews() {
     const sorted = getSortedNews();
+    replaceDynamicSearchItems('news', sorted.map((item) => ({
+      title: item.title,
+      eyebrow: item.category,
+      description: item.summary,
+      url: '/noticias',
+      keywords: [item.category, item.body, item.date]
+    })));
     renderInto(homeGrid, sorted.slice(0, 3), true);
     renderInto(newsGrid, sorted, false);
     document.body.classList.toggle('news-admin-active', adminUnlocked);
@@ -1963,7 +2403,7 @@ function initNews() {
     const isOpen = adminPanel.classList.toggle('is-open');
     adminPanel.setAttribute('aria-hidden', String(!isOpen));
     adminToggle.setAttribute('aria-expanded', String(isOpen));
-    if (isOpen) (adminUnlocked ? titleInput : emailInput)?.focus();
+    if (isOpen) (adminUnlocked ? titleInput : openAccountButton)?.focus();
   });
 
   if (passkeyLoginButton) {
@@ -1972,6 +2412,7 @@ function initNews() {
 
   loginForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (!emailInput || !passwordInput) return;
     const globalClient = gatochenteAccount.client || supabaseClient;
     if (globalClient) {
       setStatus('Tambien puedes entrar desde el boton de cuenta del navbar.');
@@ -2021,6 +2462,10 @@ function initNews() {
     } finally {
       if (submitButton) submitButton.disabled = false;
     }
+  });
+
+  openAccountButton?.addEventListener('click', () => {
+    document.querySelector('.account-nav-button')?.click();
   });
 
   passkeyLoginButton?.addEventListener('click', async () => {
@@ -3096,6 +3541,7 @@ initProtectedEmailButtons();
 initDonationModal();
 initProjectCards();
 initGatochenteAccount();
+initProjectPosts();
 initNews();
 initProfileChips();
 initVerificationBadges();
