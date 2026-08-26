@@ -7478,6 +7478,11 @@ footer.is-expanded .footer-reveal{max-height:min(720px,calc(100vh - 110px));marg
 
 @media(max-width:800px) and (orientation:portrait){
 
+.nav-center{
+max-width:min(198px, calc(100vw - 138px));
+scroll-padding-inline:8px;
+}
+
 .rotate-device-message{display:flex;}
 
 .game-board{
@@ -7487,6 +7492,14 @@ display:none;
 .game-start{
 opacity:.7;
 pointer-events:none;
+}
+
+}
+
+@media(max-width:500px) and (orientation:portrait){
+
+.nav-center{
+max-width:min(162px, calc(100vw - 118px));
 }
 
 }
