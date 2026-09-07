@@ -75,7 +75,7 @@ document.documentElement.dataset.theme=theme;
 
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="style.css?v=20260826-account-scroll">
+<link rel="stylesheet" href="style.css?v=20260826-login-catpack-fix2">
 
 </head>
 
@@ -561,20 +561,30 @@ Me gustan los proyectos que mezclan una idea útil con prototipos físicos, prog
 <span>CatPack</span>
 </div>
 <div class="donation-payment-actions" aria-label="Opciones de donación">
-<a class="donation-pay-option donation-paypal-option" href="https://www.paypal.com/ncp/payment/DHUX2QKEDJARN" target="_blank" rel="noopener noreferrer">
-<svg class="paypal-mark" viewBox="0 0 26 26" aria-hidden="true">
-<path d="M7.2 20.3h-3l3.1-16.6h6.8c2.9 0 4.9 1.6 4.9 4.2 0 3.3-2.5 5.3-6.3 5.3H9.4l-.7 3.6h3.1c3.6 0 6.5-1.7 7.7-4.7.8.7 1.2 1.6 1.2 2.8 0 3.1-2.4 5.4-6.4 5.4h-3.8l.5-2.6H7.7l-.5 2.6Z"></path>
+<button type="button" class="donation-pay-option donation-paypal-option" data-donation-pay-url="https://www.paypal.com/ncp/payment/DHUX2QKEDJARN" aria-label="Deslizar para pagar con PayPal o tarjeta">
+<span class="donation-pay-thumb" aria-hidden="true">
+<img src="img/PayPal.png" alt="">
+<svg viewBox="0 0 24 24">
+<path d="M5 12h10"></path>
+<path d="M11 7l5 5-5 5"></path>
 </svg>
-<span>Pagar con PayPal o tarjeta</span>
-</a>
+</span>
+<span class="donation-pay-label">Pagar con PayPal o tarjeta</span>
+<span class="donation-pay-end" aria-hidden="true">
+<svg viewBox="0 0 24 24">
+<path d="M5 12h12"></path>
+<path d="M13 6l6 6-6 6"></path>
+</svg>
+</span>
+</button>
 </div>
 </div>
 </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.0"></script>
-<script src="supabase-config.js?v=20260826-account-scroll"></script>
-<script src="script.js?v=20260826-account-scroll"></script>
+<script src="supabase-config.js?v=20260826-login-catpack-fix2"></script>
+<script src="script.js?v=20260826-login-catpack-fix2"></script>
 
 </body>
 </html>

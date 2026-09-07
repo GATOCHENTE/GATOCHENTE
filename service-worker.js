@@ -1,4 +1,4 @@
-const CACHE_VERSION = "gatochente-v164";
+const CACHE_VERSION = "gatochente-v167";
 const APP_SHELL_FILES = [
 	"./",
 	"./index.html",
@@ -28,6 +28,7 @@ const APP_SHELL_FILES = [
 	"./img/catsocial.PNG",
 	"./img/footer.png",
 	"./img/gatochente.jpg",
+	"./img/PayPal.png",
 	"./img/preview.jpg",
 	"./img/proyecto1.jpg",
 	"./img/proyecto2.jpg",

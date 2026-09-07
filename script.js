@@ -1272,9 +1272,32 @@ function initDonationModal() {
   const modal = document.getElementById('donation-modal');
   const openButtons = [...document.querySelectorAll('[data-paypal-modal]')];
   const closeButton = document.getElementById('donation-close');
+  const paySlider = modal ? modal.querySelector('[data-donation-pay-url]') : null;
   if (!modal || !openButtons.length) return;
 
+  const resetPaySlider = () => {
+    if (!paySlider) return;
+    paySlider.classList.remove('is-sliding', 'is-activated');
+    paySlider.style.setProperty('--donation-slide-progress', '0');
+    paySlider.style.setProperty('--donation-slide-offset', '0px');
+  };
+
+  const openDonationPayment = () => {
+    if (!paySlider || paySlider.classList.contains('is-activated')) return;
+    const paymentUrl = paySlider.dataset.donationPayUrl;
+    if (!paymentUrl) return;
+    paySlider.classList.add('is-activated');
+    paySlider.style.setProperty('--donation-slide-progress', '1');
+    const thumb = paySlider.querySelector('.donation-pay-thumb');
+    const bounds = paySlider.getBoundingClientRect();
+    const thumbWidth = thumb ? thumb.offsetWidth : 48;
+    paySlider.style.setProperty('--donation-slide-offset', `${Math.max(0, bounds.width - thumbWidth - 16)}px`);
+    window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+    window.setTimeout(resetPaySlider, 650);
+  };
+
   function openDonationModal() {
+    resetPaySlider();
     modal.classList.add('is-open');
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('modal-open');
@@ -1286,6 +1309,7 @@ function initDonationModal() {
     modal.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('modal-open');
     document.documentElement.classList.remove('modal-open');
+    resetPaySlider();
   }
 
   openButtons.forEach((button) => {
@@ -1293,6 +1317,60 @@ function initDonationModal() {
   });
 
   if (closeButton) closeButton.addEventListener('click', closeDonationModal);
+
+  if (paySlider) {
+    let isDragging = false;
+
+    const updatePaySlider = (clientX) => {
+      const thumb = paySlider.querySelector('.donation-pay-thumb');
+      const bounds = paySlider.getBoundingClientRect();
+      const thumbWidth = thumb ? thumb.offsetWidth : 48;
+      const maxOffset = Math.max(0, bounds.width - thumbWidth - 16);
+      const rawOffset = clientX - bounds.left - thumbWidth / 2;
+      const offset = Math.min(Math.max(rawOffset, 0), maxOffset);
+      const progress = maxOffset > 0 ? offset / maxOffset : 0;
+      paySlider.style.setProperty('--donation-slide-progress', progress.toFixed(3));
+      paySlider.style.setProperty('--donation-slide-offset', `${offset}px`);
+      return progress;
+    };
+
+    paySlider.addEventListener('pointerdown', (event) => {
+      if (event.button !== undefined && event.button !== 0) return;
+      event.preventDefault();
+      isDragging = true;
+      paySlider.classList.add('is-sliding');
+      paySlider.setPointerCapture(event.pointerId);
+      updatePaySlider(event.clientX);
+    });
+
+    paySlider.addEventListener('pointermove', (event) => {
+      if (!isDragging) return;
+      updatePaySlider(event.clientX);
+    });
+
+    paySlider.addEventListener('pointerup', (event) => {
+      if (!isDragging) return;
+      isDragging = false;
+      paySlider.releasePointerCapture(event.pointerId);
+      const progress = updatePaySlider(event.clientX);
+      if (progress >= 0.86) {
+        openDonationPayment();
+      } else {
+        resetPaySlider();
+      }
+    });
+
+    paySlider.addEventListener('pointercancel', () => {
+      isDragging = false;
+      resetPaySlider();
+    });
+
+    paySlider.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      openDonationPayment();
+    });
+  }
 
   modal.addEventListener('click', (event) => {
     if (event.target === modal) closeDonationModal();

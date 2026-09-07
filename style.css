@@ -206,6 +206,7 @@ transition:
 top .35s cubic-bezier(.22,1,.36,1),
 width .52s cubic-bezier(.18,1,.24,1),
 max-width .52s cubic-bezier(.18,1,.24,1),
+height .52s cubic-bezier(.18,1,.24,1),
 min-height .52s cubic-bezier(.18,1,.24,1),
 border-radius .52s cubic-bezier(.18,1,.24,1),
 box-shadow .52s ease;
@@ -228,7 +229,9 @@ border-radius:28px;
 .navbar.account-menu-open{
 
 width:min(460px, calc(100vw - 16px));
+height:min(410px, calc(100vh - 28px));
 min-height:276px;
+max-height:calc(100vh - 28px);
 align-items:flex-start;
 border-radius:28px;
 
@@ -585,7 +588,7 @@ top:50px;
 left:12px;
 z-index:30;
 width:calc(100% - 24px);
-max-height:min(430px, calc(100vh - 92px));
+max-height:calc(100% - 62px);
 overflow-x:hidden;
 overflow-y:auto;
 overscroll-behavior:contain;
@@ -2554,48 +2557,134 @@ margin:0 0 14px;
 
 .donation-pay-option{
 
-min-height:50px;
-display:inline-flex;
+position:relative;
+isolation:isolate;
+min-height:56px;
+width:100%;
+display:flex;
 align-items:center;
 justify-content:center;
-gap:10px;
-padding:11px 14px;
-border:1px solid rgba(255,255,255,0.66);
-border-radius:16px;
-background:linear-gradient(145deg,rgba(255,255,255,0.76),rgba(255,255,255,0.4));
-color:#2b241f;
+padding:8px;
+border:1px solid rgba(0,0,0,0.1);
+border-radius:999px;
+background:linear-gradient(145deg,rgba(255,255,255,0.92),rgba(255,255,255,0.6));
+color:#050505;
+appearance:none;
 font-size:14px;
 font-weight:900;
 line-height:1.1;
 text-decoration:none;
+user-select:none;
+touch-action:pan-y;
 cursor:pointer;
-box-shadow:0 12px 24px rgba(74,44,24,0.12),var(--glass-inset);
+box-shadow:0 12px 26px rgba(0,0,0,0.12),var(--glass-inset);
+overflow:hidden;
 transition:transform .32s var(--ease-spring), box-shadow .32s ease, border-color .32s ease, background .32s ease;
 
 }
 
-.donation-pay-option svg{
+.donation-pay-option::before{
 
-width:22px;
-height:22px;
-flex:0 0 22px;
-fill:currentColor;
-stroke:none;
-overflow:visible;
+content:"";
+position:absolute;
+inset:4px;
+z-index:-1;
+border-radius:inherit;
+background:linear-gradient(90deg,rgba(0,0,0,0.08),rgba(0,0,0,0.015) 46%,rgba(0,0,0,0.09));
+transform:scaleX(var(--donation-slide-progress,0.18));
+transform-origin:left center;
+transition:transform .18s ease;
 
 }
 
-.donation-pay-option .paypal-mark{
+.donation-pay-thumb{
 
-transform:translateY(1px);
+position:absolute;
+left:8px;
+top:8px;
+z-index:2;
+width:40px;
+height:40px;
+display:grid;
+grid-template-columns:1fr 1fr;
+align-items:center;
+justify-items:center;
+gap:1px;
+padding:0 9px;
+border-radius:50%;
+background:rgba(255,255,255,0.72);
+box-shadow:inset 0 0 0 1px rgba(0,0,0,0.08);
+transform:translateX(var(--donation-slide-offset,0px));
+transition:transform .24s var(--ease-spring), width .24s ease, background .24s ease;
+
+}
+
+.donation-modal.is-open .donation-pay-option::before{
+
+animation:donation-track-hint 2.4s ease-in-out .55s 2;
+
+}
+
+.donation-modal.is-open .donation-pay-thumb{
+
+animation:donation-thumb-hint 2.4s ease-in-out .55s 2;
+
+}
+
+.donation-pay-thumb img{
+
+width:17px;
+height:17px;
+object-fit:contain;
+display:block;
+
+}
+
+.donation-pay-thumb svg,
+.donation-pay-end svg{
+
+width:15px;
+height:15px;
+fill:none;
+stroke:currentColor;
+stroke-width:2.5;
+stroke-linecap:round;
+stroke-linejoin:round;
+
+}
+
+.donation-pay-label{
+
+min-width:0;
+padding:0 48px;
+text-align:center;
+color:currentColor;
+pointer-events:none;
+
+}
+
+.donation-pay-end{
+
+position:absolute;
+right:8px;
+top:8px;
+width:40px;
+height:40px;
+display:grid;
+place-items:center;
+border-radius:50%;
+background:rgba(0,0,0,0.08);
+color:#050505;
+pointer-events:none;
+transition:opacity .2s ease, transform .24s ease;
 
 }
 
 .donation-paypal-option{
 
-background:linear-gradient(145deg,#fff,#dcecff);
-color:#003087;
-border-color:rgba(0,48,135,0.2);
+background:linear-gradient(145deg,#fff,#f3f4f7);
+color:#050505;
+border-color:rgba(0,0,0,0.12);
 
 }
 
@@ -2603,8 +2692,47 @@ border-color:rgba(0,48,135,0.2);
 .donation-pay-option:focus-visible{
 
 transform:translateY(-3px) scale(1.015);
-box-shadow:0 18px 34px rgba(74,44,24,0.18),var(--glass-inset);
+box-shadow:0 18px 34px rgba(0,0,0,0.16),var(--glass-inset);
 outline:none;
+
+}
+
+.donation-pay-option:hover .donation-pay-thumb,
+.donation-pay-option:focus-visible .donation-pay-thumb,
+.donation-pay-option.is-sliding .donation-pay-thumb{
+
+width:52px;
+background:rgba(255,255,255,0.9);
+animation:none;
+
+}
+
+.donation-pay-option.is-sliding::before,
+.donation-pay-option.is-activated::before{
+
+animation:none;
+
+}
+
+.donation-pay-option.is-activated .donation-pay-end,
+.donation-pay-option.is-sliding .donation-pay-end{
+
+opacity:.38;
+transform:scale(.92);
+
+}
+
+@keyframes donation-track-hint{
+
+0%, 18%, 100%{transform:scaleX(var(--donation-slide-progress,0.18));}
+42%, 58%{transform:scaleX(.48);}
+
+}
+
+@keyframes donation-thumb-hint{
+
+0%, 18%, 100%{transform:translateX(0);}
+42%, 58%{transform:translateX(34px);}
 
 }
 
@@ -7067,8 +7195,9 @@ box-shadow:0 14px 28px rgba(0,0,0,0.22),var(--glass-inset);
 
 html[data-theme="dark"] .donation-paypal-option{
 
-background:linear-gradient(145deg,rgba(255,255,255,0.95),rgba(220,236,255,0.84));
-color:#003087;
+background:linear-gradient(145deg,rgba(255,255,255,0.96),rgba(243,244,247,0.88));
+color:#050505;
+border-color:rgba(255,255,255,0.42);
 
 }
 
@@ -7337,8 +7466,15 @@ justify-items:center;
 
 .navbar.account-menu-open{
 width:min(430px, calc(100vw - 12px));
-min-height:360px;
+height:min(392px, calc(100vh - 20px));
+height:min(392px, calc(100svh - 20px));
+height:min(392px, calc(100dvh - 20px));
+min-height:min(360px, calc(100vh - 20px));
+min-height:min(360px, calc(100svh - 20px));
+min-height:min(360px, calc(100dvh - 20px));
 max-height:calc(100vh - 20px);
+max-height:calc(100svh - 20px);
+max-height:calc(100dvh - 20px);
 }
 
 .navbar.game-menu-open{
@@ -7364,7 +7500,7 @@ max-width:calc(100vw - 20px);
 .nav-left{gap:6px;}
 .nav-left::after{height:24px;margin:0 1px;}
 .account-nav-menu{top:48px;left:12px;width:calc(100% - 24px);}
-.navbar.account-menu-open .account-nav-menu{max-height:calc(100vh - 84px);}
+.navbar.account-menu-open .account-nav-menu{max-height:calc(100% - 60px);}
 
 .nav-search-overlay{left:44px;right:6px;}
 .navbar.search-open{min-height:var(--search-open-height,232px);}
@@ -7481,8 +7617,15 @@ border-radius:12px;
 
 .navbar.account-menu-open{
 width:min(390px, calc(100vw - 12px));
-min-height:360px;
+height:min(386px, calc(100vh - 20px));
+height:min(386px, calc(100svh - 20px));
+height:min(386px, calc(100dvh - 20px));
+min-height:min(354px, calc(100vh - 20px));
+min-height:min(354px, calc(100svh - 20px));
+min-height:min(354px, calc(100dvh - 20px));
 max-height:calc(100vh - 20px);
+max-height:calc(100svh - 20px);
+max-height:calc(100dvh - 20px);
 }
 
 .navbar.game-menu-open{
@@ -7511,7 +7654,7 @@ footer{margin-bottom:10px;}
 .nav-left{gap:5px;}
 .nav-left::after{height:22px;margin:0 1px;}
 .account-nav-menu{top:46px;left:10px;width:calc(100% - 20px);}
-.navbar.account-menu-open .account-nav-menu{max-height:calc(100vh - 76px);padding:12px;}
+.navbar.account-menu-open .account-nav-menu{max-height:calc(100% - 58px);padding:12px;}
 
 .nav-divider{height:22px;margin:0 0 0 2px;}
 
@@ -7738,6 +7881,7 @@ margin:0 auto;
 padding:132px 0 72px;
 position:relative;
 isolation:isolate;
+color:var(--ink);
 }
 
 .catpack-page::before,
@@ -8408,6 +8552,22 @@ background:rgba(255,255,255,.08);
 border-color:rgba(255,255,255,.16);
 }
 
+html[data-theme="dark"] .catpack-new-version,
+html[data-theme="dark"] .catpack-features strong,
+html[data-theme="dark"] .catpack-release h2,
+html[data-theme="dark"] .catpack-legacy h2{
+color:var(--ink);
+}
+
+html[data-theme="dark"] .catpack-lead,
+html[data-theme="dark"] .catpack-note,
+html[data-theme="dark"] .catpack-features p,
+html[data-theme="dark"] .catpack-release p,
+html[data-theme="dark"] .catpack-legacy p,
+html[data-theme="dark"] .catpack-system-note{
+color:var(--muted);
+}
+
 html[data-theme="dark"] .catpack-body::after{
 background:
 radial-gradient(circle at 88% 16%,rgba(125,211,252,.14),transparent 0 24%),
@@ -8571,21 +8731,46 @@ gap:8px;
 }
 
 .donation-pay-option{
-min-height:44px;
+min-height:52px;
 font-size:12px;
-padding:9px 10px;
-border-radius:14px;
+padding:7px;
+border-radius:999px;
 }
 
-.donation-pay-option svg{
-width:18px;
-height:18px;
-flex-basis:18px;
-stroke:none;
+.donation-pay-thumb,
+.donation-pay-end{
+top:7px;
+width:38px;
+height:38px;
 }
 
-.donation-pay-option .paypal-mark{
-transform:translateY(1px);
+.donation-pay-thumb{
+left:7px;
+}
+
+.donation-pay-end{
+right:7px;
+}
+
+.donation-pay-option:hover .donation-pay-thumb,
+.donation-pay-option:focus-visible .donation-pay-thumb,
+.donation-pay-option.is-sliding .donation-pay-thumb{
+width:48px;
+}
+
+.donation-pay-label{
+padding:0 44px;
+}
+
+.donation-pay-thumb img{
+width:16px;
+height:16px;
+}
+
+.donation-pay-thumb svg,
+.donation-pay-end svg{
+width:14px;
+height:14px;
 }
 
 .donation-content > *,
