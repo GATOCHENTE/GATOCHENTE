@@ -1291,12 +1291,9 @@ function initDonationModal() {
     if (!paySlider) return 0;
     const thumb = paySlider.querySelector('.donation-pay-thumb');
     const end = paySlider.querySelector('.donation-pay-end');
-    const currentOffset = Number.parseFloat(getComputedStyle(paySlider).getPropertyValue('--donation-slide-offset')) || 0;
-    const thumbRect = thumb?.getBoundingClientRect();
-    const endRect = end?.getBoundingClientRect();
-    if (thumbRect && endRect) {
-      const thumbBaseLeft = thumbRect.left - currentOffset;
-      return Math.max(0, endRect.left - thumbBaseLeft);
+    if (thumb && end) {
+      const centeredOffset = end.offsetLeft - thumb.offsetLeft + (end.offsetWidth - thumb.offsetWidth) / 2;
+      return Math.max(0, centeredOffset - 1);
     }
     const bounds = paySlider.getBoundingClientRect();
     const thumbWidth = thumb ? thumb.offsetWidth : 48;
@@ -1359,12 +1356,11 @@ function initDonationModal() {
       const end = paySlider.querySelector('.donation-pay-end');
       const currentOffset = Number.parseFloat(getComputedStyle(paySlider).getPropertyValue('--donation-slide-offset')) || 0;
       const thumbRect = thumb?.getBoundingClientRect();
-      const endRect = end?.getBoundingClientRect();
-      if (!thumbRect || !endRect) return null;
+      if (!thumb || !end || !thumbRect) return null;
       const thumbBaseLeft = thumbRect.left - currentOffset;
       return {
         grabOffset: clientX - thumbRect.left,
-        maxOffset: Math.max(0, endRect.left - thumbBaseLeft),
+        maxOffset: getPaySliderMaxOffset(),
         thumbBaseLeft
       };
     };

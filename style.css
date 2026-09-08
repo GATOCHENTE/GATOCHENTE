@@ -2758,7 +2758,6 @@ animation:donation-label-reminder 1s ease-in-out both;
 
 }
 
-.donation-pay-option.is-activated .donation-pay-end,
 .donation-pay-option.is-sliding .donation-pay-end{
 
 opacity:.38;
