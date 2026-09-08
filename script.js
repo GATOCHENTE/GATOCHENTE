@@ -1298,6 +1298,12 @@ function initDonationModal() {
     return Math.max(0, bounds.width - thumbWidth - 16);
   };
 
+  const shouldOpenDonationInSameTab = () =>
+    Boolean(
+      paySlider?.dataset.donationLastInput === 'touch' ||
+      window.matchMedia?.('(pointer: coarse)').matches
+    );
+
   const openDonationPayment = () => {
     if (!paySlider || paySlider.classList.contains('is-activated')) return;
     const paymentUrl = paySlider.dataset.donationPayUrl;
@@ -1305,6 +1311,10 @@ function initDonationModal() {
     paySlider.classList.add('is-activated');
     paySlider.style.setProperty('--donation-slide-progress', '1');
     paySlider.style.setProperty('--donation-slide-offset', `${getPaySliderMaxOffset()}px`);
+    if (shouldOpenDonationInSameTab()) {
+      window.location.assign(paymentUrl);
+      return;
+    }
     window.open(paymentUrl, '_blank', 'noopener,noreferrer');
     window.setTimeout(resetPaySlider, 650);
   };
@@ -1400,6 +1410,7 @@ function initDonationModal() {
       event.preventDefault();
       isDragging = true;
       sliderPointerId = pointerId;
+      paySlider.dataset.donationLastInput = pointerId === 'touch' || event.pointerType === 'touch' ? 'touch' : 'pointer';
       dragState = createPaySliderDragState(clientX);
       if (dragState) {
         dragState.startClientX = clientX;
@@ -1473,6 +1484,10 @@ function initDonationModal() {
       sliderPointerId = null;
       dragState = null;
       resetPaySlider();
+    });
+
+    paySlider.addEventListener('click', (event) => {
+      event.preventDefault();
     });
 
     paySlider.addEventListener('keydown', (event) => {
