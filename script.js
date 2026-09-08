@@ -1282,6 +1282,11 @@ function initDonationModal() {
     paySlider.style.setProperty('--donation-slide-offset', '0px');
   };
 
+  const resetReturnedDonationSlider = () => {
+    if (!modal.classList.contains('is-open')) return;
+    resetPaySlider();
+  };
+
   const getPaySliderMaxOffset = () => {
     if (!paySlider) return 0;
     const thumb = paySlider.querySelector('.donation-pay-thumb');
@@ -1494,6 +1499,12 @@ function initDonationModal() {
       if (event.key !== 'Enter' && event.key !== ' ') return;
       event.preventDefault();
       openDonationPayment();
+    });
+
+    window.addEventListener('pageshow', resetReturnedDonationSlider);
+    window.addEventListener('focus', resetReturnedDonationSlider);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) resetReturnedDonationSlider();
     });
   }
 
