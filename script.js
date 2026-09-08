@@ -1335,13 +1335,31 @@ function initDonationModal() {
     let isDragging = false;
     let sliderPointerId = null;
     let lastSliderProgress = 0;
+    let dragState = null;
 
-    const updatePaySlider = (clientX) => {
+    const createPaySliderDragState = (clientX) => {
+      const thumb = paySlider.querySelector('.donation-pay-thumb');
+      const end = paySlider.querySelector('.donation-pay-end');
+      const currentOffset = Number.parseFloat(getComputedStyle(paySlider).getPropertyValue('--donation-slide-offset')) || 0;
+      const thumbRect = thumb?.getBoundingClientRect();
+      const endRect = end?.getBoundingClientRect();
+      if (!thumbRect || !endRect) return null;
+      const thumbBaseLeft = thumbRect.left - currentOffset;
+      return {
+        grabOffset: clientX - thumbRect.left,
+        maxOffset: Math.max(0, endRect.left - thumbBaseLeft),
+        thumbBaseLeft
+      };
+    };
+
+    const updatePaySlider = (clientX, state = dragState) => {
       const thumb = paySlider.querySelector('.donation-pay-thumb');
       const bounds = paySlider.getBoundingClientRect();
       const thumbWidth = thumb ? thumb.offsetWidth : 48;
-      const maxOffset = getPaySliderMaxOffset();
-      const rawOffset = clientX - bounds.left - thumbWidth / 2;
+      const maxOffset = state ? state.maxOffset : getPaySliderMaxOffset();
+      const rawOffset = state
+        ? clientX - state.thumbBaseLeft - state.grabOffset
+        : clientX - bounds.left - thumbWidth / 2;
       const offset = Math.min(Math.max(rawOffset, 0), maxOffset);
       const progress = maxOffset > 0 ? offset / maxOffset : 0;
       paySlider.style.setProperty('--donation-slide-progress', progress.toFixed(3));
@@ -1369,9 +1387,10 @@ function initDonationModal() {
       event.preventDefault();
       isDragging = true;
       sliderPointerId = event.pointerId;
+      dragState = createPaySliderDragState(event.clientX);
       paySlider.classList.add('is-sliding');
       paySlider.setPointerCapture(event.pointerId);
-      updatePaySlider(event.clientX);
+      updatePaySlider(event.clientX, dragState);
     });
 
     paySlider.addEventListener('touchstart', (event) => {
@@ -1387,13 +1406,14 @@ function initDonationModal() {
       event.preventDefault();
       isDragging = true;
       sliderPointerId = 'touch';
+      dragState = createPaySliderDragState(touch.clientX);
       paySlider.classList.add('is-sliding');
-      updatePaySlider(touch.clientX);
+      updatePaySlider(touch.clientX, dragState);
     }, { passive: false });
 
     paySlider.addEventListener('pointermove', (event) => {
       if (!isDragging || event.pointerId !== sliderPointerId) return;
-      updatePaySlider(event.clientX);
+      updatePaySlider(event.clientX, dragState);
     });
 
     paySlider.addEventListener('touchmove', (event) => {
@@ -1401,7 +1421,7 @@ function initDonationModal() {
       const touch = event.touches[0];
       if (!touch) return;
       event.preventDefault();
-      updatePaySlider(touch.clientX);
+      updatePaySlider(touch.clientX, dragState);
     }, { passive: false });
 
     paySlider.addEventListener('pointerup', (event) => {
@@ -1409,7 +1429,8 @@ function initDonationModal() {
       isDragging = false;
       sliderPointerId = null;
       if (paySlider.hasPointerCapture(event.pointerId)) paySlider.releasePointerCapture(event.pointerId);
-      const progress = updatePaySlider(event.clientX);
+      const progress = updatePaySlider(event.clientX, dragState);
+      dragState = null;
       if (progress >= 0.78) {
         openDonationPayment();
       } else {
@@ -1421,6 +1442,7 @@ function initDonationModal() {
       if (!isDragging || sliderPointerId !== 'touch') return;
       isDragging = false;
       sliderPointerId = null;
+      dragState = null;
       if (lastSliderProgress >= 0.78) {
         openDonationPayment();
       } else {
@@ -1431,12 +1453,14 @@ function initDonationModal() {
     paySlider.addEventListener('pointercancel', () => {
       isDragging = false;
       sliderPointerId = null;
+      dragState = null;
       resetPaySlider();
     });
 
     paySlider.addEventListener('touchcancel', () => {
       isDragging = false;
       sliderPointerId = null;
+      dragState = null;
       resetPaySlider();
     });
 
