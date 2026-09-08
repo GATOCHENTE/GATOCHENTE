@@ -1282,16 +1282,29 @@ function initDonationModal() {
     paySlider.style.setProperty('--donation-slide-offset', '0px');
   };
 
+  const getPaySliderMaxOffset = () => {
+    if (!paySlider) return 0;
+    const thumb = paySlider.querySelector('.donation-pay-thumb');
+    const end = paySlider.querySelector('.donation-pay-end');
+    const currentOffset = Number.parseFloat(getComputedStyle(paySlider).getPropertyValue('--donation-slide-offset')) || 0;
+    const thumbRect = thumb?.getBoundingClientRect();
+    const endRect = end?.getBoundingClientRect();
+    if (thumbRect && endRect) {
+      const thumbBaseLeft = thumbRect.left - currentOffset;
+      return Math.max(0, endRect.left - thumbBaseLeft);
+    }
+    const bounds = paySlider.getBoundingClientRect();
+    const thumbWidth = thumb ? thumb.offsetWidth : 48;
+    return Math.max(0, bounds.width - thumbWidth - 16);
+  };
+
   const openDonationPayment = () => {
     if (!paySlider || paySlider.classList.contains('is-activated')) return;
     const paymentUrl = paySlider.dataset.donationPayUrl;
     if (!paymentUrl) return;
     paySlider.classList.add('is-activated');
     paySlider.style.setProperty('--donation-slide-progress', '1');
-    const thumb = paySlider.querySelector('.donation-pay-thumb');
-    const bounds = paySlider.getBoundingClientRect();
-    const thumbWidth = thumb ? thumb.offsetWidth : 48;
-    paySlider.style.setProperty('--donation-slide-offset', `${Math.max(0, bounds.width - thumbWidth - 16)}px`);
+    paySlider.style.setProperty('--donation-slide-offset', `${getPaySliderMaxOffset()}px`);
     window.open(paymentUrl, '_blank', 'noopener,noreferrer');
     window.setTimeout(resetPaySlider, 650);
   };
@@ -1320,40 +1333,95 @@ function initDonationModal() {
 
   if (paySlider) {
     let isDragging = false;
+    let sliderPointerId = null;
+    let lastSliderProgress = 0;
 
     const updatePaySlider = (clientX) => {
       const thumb = paySlider.querySelector('.donation-pay-thumb');
       const bounds = paySlider.getBoundingClientRect();
       const thumbWidth = thumb ? thumb.offsetWidth : 48;
-      const maxOffset = Math.max(0, bounds.width - thumbWidth - 16);
+      const maxOffset = getPaySliderMaxOffset();
       const rawOffset = clientX - bounds.left - thumbWidth / 2;
       const offset = Math.min(Math.max(rawOffset, 0), maxOffset);
       const progress = maxOffset > 0 ? offset / maxOffset : 0;
       paySlider.style.setProperty('--donation-slide-progress', progress.toFixed(3));
       paySlider.style.setProperty('--donation-slide-offset', `${offset}px`);
+      lastSliderProgress = progress;
       return progress;
     };
 
+    const showPaySliderHint = () => {
+      paySlider.classList.remove('needs-slide-hint');
+      void paySlider.offsetWidth;
+      paySlider.classList.add('needs-slide-hint');
+      window.setTimeout(() => paySlider.classList.remove('needs-slide-hint'), 1050);
+    };
+
     paySlider.addEventListener('pointerdown', (event) => {
+      if (isDragging) return;
       if (event.button !== undefined && event.button !== 0) return;
+      const thumb = paySlider.querySelector('.donation-pay-thumb');
+      const startedOnThumb = event.target instanceof Element && event.target.closest('.donation-pay-thumb');
+      if (!thumb || !startedOnThumb) {
+        showPaySliderHint();
+        return;
+      }
       event.preventDefault();
       isDragging = true;
+      sliderPointerId = event.pointerId;
       paySlider.classList.add('is-sliding');
       paySlider.setPointerCapture(event.pointerId);
       updatePaySlider(event.clientX);
     });
 
+    paySlider.addEventListener('touchstart', (event) => {
+      if (isDragging) return;
+      const touch = event.touches[0];
+      if (!touch) return;
+      const thumb = paySlider.querySelector('.donation-pay-thumb');
+      const startedOnThumb = event.target instanceof Element && event.target.closest('.donation-pay-thumb');
+      if (!thumb || !startedOnThumb) {
+        showPaySliderHint();
+        return;
+      }
+      event.preventDefault();
+      isDragging = true;
+      sliderPointerId = 'touch';
+      paySlider.classList.add('is-sliding');
+      updatePaySlider(touch.clientX);
+    }, { passive: false });
+
     paySlider.addEventListener('pointermove', (event) => {
-      if (!isDragging) return;
+      if (!isDragging || event.pointerId !== sliderPointerId) return;
       updatePaySlider(event.clientX);
     });
 
+    paySlider.addEventListener('touchmove', (event) => {
+      if (!isDragging || sliderPointerId !== 'touch') return;
+      const touch = event.touches[0];
+      if (!touch) return;
+      event.preventDefault();
+      updatePaySlider(touch.clientX);
+    }, { passive: false });
+
     paySlider.addEventListener('pointerup', (event) => {
-      if (!isDragging) return;
+      if (!isDragging || event.pointerId !== sliderPointerId) return;
       isDragging = false;
-      paySlider.releasePointerCapture(event.pointerId);
+      sliderPointerId = null;
+      if (paySlider.hasPointerCapture(event.pointerId)) paySlider.releasePointerCapture(event.pointerId);
       const progress = updatePaySlider(event.clientX);
-      if (progress >= 0.86) {
+      if (progress >= 0.78) {
+        openDonationPayment();
+      } else {
+        resetPaySlider();
+      }
+    });
+
+    paySlider.addEventListener('touchend', () => {
+      if (!isDragging || sliderPointerId !== 'touch') return;
+      isDragging = false;
+      sliderPointerId = null;
+      if (lastSliderProgress >= 0.78) {
         openDonationPayment();
       } else {
         resetPaySlider();
@@ -1362,6 +1430,13 @@ function initDonationModal() {
 
     paySlider.addEventListener('pointercancel', () => {
       isDragging = false;
+      sliderPointerId = null;
+      resetPaySlider();
+    });
+
+    paySlider.addEventListener('touchcancel', () => {
+      isDragging = false;
+      sliderPointerId = null;
       resetPaySlider();
     });
 

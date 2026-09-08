@@ -2604,6 +2604,8 @@ left:8px;
 top:8px;
 z-index:2;
 width:40px;
+min-width:40px;
+max-width:40px;
 height:40px;
 display:grid;
 grid-template-columns:1fr 1fr;
@@ -2616,6 +2618,13 @@ background:rgba(255,255,255,0.72);
 box-shadow:inset 0 0 0 1px rgba(0,0,0,0.08);
 transform:translateX(var(--donation-slide-offset,0px));
 transition:transform .24s var(--ease-spring), width .24s ease, background .24s ease;
+cursor:grab;
+
+}
+
+.donation-pay-thumb:active{
+
+cursor:grabbing;
 
 }
 
@@ -2701,16 +2710,43 @@ outline:none;
 .donation-pay-option:focus-visible .donation-pay-thumb,
 .donation-pay-option.is-sliding .donation-pay-thumb{
 
-width:52px;
 background:rgba(255,255,255,0.9);
 animation:none;
 
 }
 
 .donation-pay-option.is-sliding::before,
-.donation-pay-option.is-activated::before{
+.donation-pay-option.is-activated::before,
+.donation-pay-option.needs-slide-hint::before{
 
 animation:none;
+
+}
+
+.donation-pay-option.needs-slide-hint{
+
+border-color:rgba(0,0,0,0.26);
+box-shadow:0 18px 36px rgba(0,0,0,0.18),0 0 0 4px rgba(0,0,0,0.06),var(--glass-inset);
+
+}
+
+.donation-pay-option.needs-slide-hint::before{
+
+transform:scaleX(.44);
+background:linear-gradient(90deg,rgba(0,0,0,0.16),rgba(0,0,0,0.045) 54%,rgba(0,0,0,0.12));
+
+}
+
+.donation-pay-option.needs-slide-hint .donation-pay-thumb{
+
+background:#fff;
+animation:donation-thumb-reminder 1s ease-in-out both;
+
+}
+
+.donation-pay-option.needs-slide-hint .donation-pay-label{
+
+animation:donation-label-reminder 1s ease-in-out both;
 
 }
 
@@ -2733,6 +2769,22 @@ transform:scale(.92);
 
 0%, 18%, 100%{transform:translateX(0);}
 42%, 58%{transform:translateX(34px);}
+
+}
+
+@keyframes donation-thumb-reminder{
+
+0%, 100%{transform:translateX(var(--donation-slide-offset,0px));}
+22%{transform:translateX(calc(var(--donation-slide-offset,0px) + 8px));}
+44%{transform:translateX(calc(var(--donation-slide-offset,0px) + 26px));}
+64%{transform:translateX(calc(var(--donation-slide-offset,0px) + 12px));}
+
+}
+
+@keyframes donation-label-reminder{
+
+0%, 100%{opacity:1;}
+35%, 65%{opacity:.62;}
 
 }
 
@@ -8741,6 +8793,8 @@ border-radius:999px;
 .donation-pay-end{
 top:7px;
 width:38px;
+min-width:38px;
+max-width:38px;
 height:38px;
 }
 
@@ -8750,12 +8804,6 @@ left:7px;
 
 .donation-pay-end{
 right:7px;
-}
-
-.donation-pay-option:hover .donation-pay-thumb,
-.donation-pay-option:focus-visible .donation-pay-thumb,
-.donation-pay-option.is-sliding .donation-pay-thumb{
-width:48px;
 }
 
 .donation-pay-label{
