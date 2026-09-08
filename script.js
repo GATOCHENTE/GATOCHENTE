@@ -1277,7 +1277,7 @@ function initDonationModal() {
 
   const resetPaySlider = () => {
     if (!paySlider) return;
-    paySlider.classList.remove('is-sliding', 'is-activated');
+    paySlider.classList.remove('is-sliding', 'is-activated', 'needs-slide-hint');
     paySlider.style.setProperty('--donation-slide-progress', '0');
     paySlider.style.setProperty('--donation-slide-offset', '0px');
   };
@@ -1336,6 +1336,8 @@ function initDonationModal() {
     let sliderPointerId = null;
     let lastSliderProgress = 0;
     let dragState = null;
+    const sliderActivationThreshold = 0.82;
+    const sliderMinDragDistance = 24;
 
     const createPaySliderDragState = (clientX) => {
       const thumb = paySlider.querySelector('.donation-pay-thumb');
@@ -1368,6 +1370,19 @@ function initDonationModal() {
       return progress;
     };
 
+    const finishPaySliderDrag = () => {
+      const didDrag = dragState && Math.abs((dragState.lastClientX || dragState.startClientX) - dragState.startClientX) >= sliderMinDragDistance;
+      const maxOffset = dragState ? dragState.maxOffset : getPaySliderMaxOffset();
+      const currentOffset = Number.parseFloat(getComputedStyle(paySlider).getPropertyValue('--donation-slide-offset')) || 0;
+      const reachedEnd = maxOffset > 0 && (lastSliderProgress >= sliderActivationThreshold || currentOffset >= maxOffset - 3);
+      dragState = null;
+      if (didDrag && reachedEnd) {
+        openDonationPayment();
+      } else {
+        resetPaySlider();
+      }
+    };
+
     const showPaySliderHint = () => {
       paySlider.classList.remove('needs-slide-hint');
       void paySlider.offsetWidth;
@@ -1375,79 +1390,75 @@ function initDonationModal() {
       window.setTimeout(() => paySlider.classList.remove('needs-slide-hint'), 1050);
     };
 
+    const startPaySliderDrag = (event, clientX, pointerId) => {
+      const thumb = paySlider.querySelector('.donation-pay-thumb');
+      const startedOnThumb = event.target instanceof Element && event.target.closest('.donation-pay-thumb');
+      if (!thumb || !startedOnThumb) {
+        showPaySliderHint();
+        return false;
+      }
+      event.preventDefault();
+      isDragging = true;
+      sliderPointerId = pointerId;
+      dragState = createPaySliderDragState(clientX);
+      if (dragState) {
+        dragState.startClientX = clientX;
+        dragState.lastClientX = clientX;
+      }
+      lastSliderProgress = 0;
+      paySlider.classList.add('is-sliding');
+      updatePaySlider(clientX, dragState);
+      return true;
+    };
+
     paySlider.addEventListener('pointerdown', (event) => {
       if (isDragging) return;
       if (event.button !== undefined && event.button !== 0) return;
-      const thumb = paySlider.querySelector('.donation-pay-thumb');
-      const startedOnThumb = event.target instanceof Element && event.target.closest('.donation-pay-thumb');
-      if (!thumb || !startedOnThumb) {
-        showPaySliderHint();
-        return;
-      }
-      event.preventDefault();
-      isDragging = true;
-      sliderPointerId = event.pointerId;
-      dragState = createPaySliderDragState(event.clientX);
-      paySlider.classList.add('is-sliding');
-      paySlider.setPointerCapture(event.pointerId);
-      updatePaySlider(event.clientX, dragState);
+      if (!startPaySliderDrag(event, event.clientX, event.pointerId)) return;
+      if (paySlider.setPointerCapture) paySlider.setPointerCapture(event.pointerId);
     });
 
     paySlider.addEventListener('touchstart', (event) => {
+      if (window.PointerEvent) return;
       if (isDragging) return;
       const touch = event.touches[0];
       if (!touch) return;
-      const thumb = paySlider.querySelector('.donation-pay-thumb');
-      const startedOnThumb = event.target instanceof Element && event.target.closest('.donation-pay-thumb');
-      if (!thumb || !startedOnThumb) {
-        showPaySliderHint();
-        return;
-      }
-      event.preventDefault();
-      isDragging = true;
-      sliderPointerId = 'touch';
-      dragState = createPaySliderDragState(touch.clientX);
-      paySlider.classList.add('is-sliding');
-      updatePaySlider(touch.clientX, dragState);
+      startPaySliderDrag(event, touch.clientX, 'touch');
     }, { passive: false });
 
     paySlider.addEventListener('pointermove', (event) => {
       if (!isDragging || event.pointerId !== sliderPointerId) return;
+      event.preventDefault();
+      if (dragState) dragState.lastClientX = event.clientX;
       updatePaySlider(event.clientX, dragState);
     });
 
     paySlider.addEventListener('touchmove', (event) => {
+      if (window.PointerEvent) return;
       if (!isDragging || sliderPointerId !== 'touch') return;
       const touch = event.touches[0];
       if (!touch) return;
       event.preventDefault();
+      if (dragState) dragState.lastClientX = touch.clientX;
       updatePaySlider(touch.clientX, dragState);
     }, { passive: false });
 
     paySlider.addEventListener('pointerup', (event) => {
       if (!isDragging || event.pointerId !== sliderPointerId) return;
+      event.preventDefault();
+      if (dragState) dragState.lastClientX = event.clientX;
       isDragging = false;
       sliderPointerId = null;
       if (paySlider.hasPointerCapture(event.pointerId)) paySlider.releasePointerCapture(event.pointerId);
-      const progress = updatePaySlider(event.clientX, dragState);
-      dragState = null;
-      if (progress >= 0.78) {
-        openDonationPayment();
-      } else {
-        resetPaySlider();
-      }
+      finishPaySliderDrag();
     });
 
     paySlider.addEventListener('touchend', () => {
+      if (window.PointerEvent) return;
       if (!isDragging || sliderPointerId !== 'touch') return;
       isDragging = false;
       sliderPointerId = null;
-      dragState = null;
-      if (lastSliderProgress >= 0.78) {
-        openDonationPayment();
-      } else {
-        resetPaySlider();
-      }
+      finishPaySliderDrag();
     });
 
     paySlider.addEventListener('pointercancel', () => {
