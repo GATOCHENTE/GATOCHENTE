@@ -2674,8 +2674,13 @@ function initNews() {
     }
   });
 
-  openAccountButton?.addEventListener('click', () => {
-    document.querySelector('.account-nav-button')?.click();
+  openAccountButton?.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const accountButton = document.querySelector('.account-nav-button');
+    const accountMenu = document.querySelector('.account-nav-menu');
+    if (accountMenu?.hidden) accountButton?.click();
+    window.setTimeout(() => document.querySelector('[data-account-email]')?.focus(), 0);
   });
 
   passkeyLoginButton?.addEventListener('click', async () => {
@@ -2789,7 +2794,15 @@ function initNews() {
 
   editorForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (!supabaseClient || !adminUnlocked) return;
+    if (!supabaseClient) {
+      setStatus('No se pudo conectar con Supabase. Revisa la configuración antes de guardar.');
+      return;
+    }
+    if (!adminUnlocked) {
+      setStatus('Primero inicia sesión desde el botón de cuenta del navbar.');
+      document.querySelector('.account-nav-button')?.click();
+      return;
+    }
 
     let imageUrl = idInput.value
       ? newsItems.find((item) => item.id === idInput.value)?.imageUrl || ''
@@ -2821,9 +2834,11 @@ function initNews() {
       ? supabaseClient.from('news_posts').update(payload).eq('id', idInput.value)
       : supabaseClient.from('news_posts').insert(payload);
 
+    setStatus(idInput.value ? 'Actualizando noticia...' : 'Guardando noticia...');
     const { error } = await request;
     if (error) {
-      setStatus('Supabase rechazó el cambio. Revisa que tu email sea el admin en RLS.');
+      console.error('News save failed:', error);
+      setStatus('Supabase rechazó el cambio. Revisa permisos de admin y RLS.');
       return;
     }
 
