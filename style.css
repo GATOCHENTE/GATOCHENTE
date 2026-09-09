@@ -6813,12 +6813,29 @@ background:linear-gradient(145deg,rgba(255,255,255,0.88),rgba(255,255,255,0.54))
 box-shadow:0 16px 34px rgba(74,44,24,0.12),var(--glass-inset);
 backdrop-filter:blur(18px) saturate(145%);
 -webkit-backdrop-filter:blur(18px) saturate(145%);
+color:var(--ink);
 
 }
 
 .project-admin-panel[hidden]{
 
-display:none;
+display:none !important;
+
+}
+
+.project-admin-toggle{
+
+margin:18px auto 0;
+
+}
+
+.project-admin-toggle svg{
+
+width:17px;
+height:17px;
+stroke:currentColor;
+stroke-width:2;
+fill:none;
 
 }
 
@@ -6870,7 +6887,14 @@ gap:12px;
 
 .project-editor-form[hidden]{
 
-display:none;
+display:none !important;
+
+}
+
+.project-dropzone,
+.project-image-preview{
+
+grid-column:1/-1;
 
 }
 

@@ -1926,6 +1926,7 @@ function initProjectPosts() {
   let adminPanel = null;
   let editorForm = null;
   let statusText = null;
+  let adminToggle = null;
 
   function slugify(value) {
     return String(value || 'proyecto')
@@ -2044,6 +2045,7 @@ function initProjectPosts() {
 
   async function loadProjects() {
     if (!client) {
+      if (statusText) statusText.textContent = 'Configura Supabase para editar proyectos.';
       renderProjects();
       return;
     }
@@ -2053,12 +2055,18 @@ function initProjectPosts() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      if (statusText) statusText.textContent = 'No se pudo cargar project_posts. Ejecuta supabase/projects-and-media.sql.';
+      console.error('Project load failed:', error);
+      if (statusText) statusText.textContent = `No se pudo cargar project_posts (${error.code || 'error'}). Ejecuta supabase/projects-and-media.sql.`;
       renderProjects();
       return;
     }
 
     projectItems = (data || []).map(normalizeProject);
+    if (statusText && isAdmin) {
+      statusText.textContent = projectItems.length
+        ? `${projectItems.length} proyecto${projectItems.length === 1 ? '' : 's'} cargado${projectItems.length === 1 ? '' : 's'}.`
+        : 'Todavía no hay proyectos dinámicos. Puedes agregar el primero.';
+    }
     renderProjects();
   }
 
@@ -2080,11 +2088,19 @@ function initProjectPosts() {
     editorForm.reset();
     selectedProjectImage = null;
     editorForm.querySelector('[data-project-id]').value = '';
+    const preview = editorForm.querySelector('[data-project-preview]');
+    if (preview) {
+      preview.hidden = true;
+      preview.innerHTML = '';
+    }
+    const dropzone = editorForm.querySelector('[data-project-dropzone]');
+    if (dropzone) dropzone.classList.remove('is-dragging');
     editorForm.hidden = true;
   }
 
   function openProjectEditor(item = null) {
     if (!editorForm || !isAdmin) return;
+    selectedProjectImage = null;
     editorForm.hidden = false;
     editorForm.querySelector('[data-project-id]').value = item?.id || '';
     editorForm.querySelector('[data-project-title]').value = item?.title || '';
@@ -2093,12 +2109,69 @@ function initProjectPosts() {
     editorForm.querySelector('[data-project-summary]').value = item?.summary || '';
     editorForm.querySelector('[data-project-body]').value = item?.body || '';
     editorForm.querySelector('[data-project-tags]').value = item?.tags?.join(', ') || '';
+    editorForm.querySelector('[data-project-image]').value = '';
+    const preview = editorForm.querySelector('[data-project-preview]');
+    if (preview) {
+      preview.hidden = !item?.imageUrl;
+      preview.innerHTML = item?.imageUrl ? `<img src="${escapeHtmlValue(item.imageUrl)}" alt=""><span>Imagen actual</span>` : '';
+    }
     editorForm.querySelector('[data-project-delete]').hidden = !item;
+    statusText.textContent = item ? 'Editando proyecto existente.' : 'Redactando nuevo proyecto.';
+    adminPanel.hidden = false;
     editorForm.querySelector('[data-project-title]').focus();
+  }
+
+  function openAccountFromProjects() {
+    const accountButton = document.querySelector('.account-nav-button');
+    const accountMenu = document.querySelector('.account-nav-menu');
+    if (accountMenu?.hidden) accountButton?.click();
+    window.setTimeout(() => document.querySelector('[data-account-email]')?.focus(), 0);
+  }
+
+  function setProjectImageFile(file) {
+    const input = editorForm?.querySelector('[data-project-image]');
+    const preview = editorForm?.querySelector('[data-project-preview]');
+    if (!input || !file) return;
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    input.files = transfer.files;
+    selectedProjectImage = file;
+    if (preview) {
+      const previewUrl = URL.createObjectURL(file);
+      preview.hidden = false;
+      preview.innerHTML = `<img src="${previewUrl}" alt=""><span>${escapeHtmlValue(file.name)}</span>`;
+    }
   }
 
   function buildAdminPanel() {
     if (!projectsSection || adminPanel) return;
+    const heading = projectsSection.querySelector('.projects-heading');
+    if (heading && !heading.querySelector('[data-project-admin-toggle]')) {
+      adminToggle = document.createElement('button');
+      adminToggle.type = 'button';
+      adminToggle.className = 'news-admin-button project-admin-toggle';
+      adminToggle.dataset.projectAdminToggle = 'true';
+      adminToggle.innerHTML = `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 20h9"></path>
+          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+        </svg>
+        <span>Editar proyectos</span>
+      `;
+      heading.appendChild(adminToggle);
+      adminToggle.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!isAdmin) {
+          openAccountFromProjects();
+          return;
+        }
+        adminPanel.hidden = false;
+        statusText.textContent = 'Editor de proyectos listo.';
+        adminPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
     adminPanel = document.createElement('div');
     adminPanel.className = 'project-admin-panel';
     adminPanel.hidden = true;
@@ -2119,7 +2192,20 @@ function initProjectPosts() {
         <label class="wide">Resumen<input type="text" data-project-summary maxlength="220" required></label>
         <label class="wide">Detalle<textarea data-project-body maxlength="1200" required></textarea></label>
         <label class="wide">Tags<input type="text" data-project-tags placeholder="Windows, Arduino, Web"></label>
-        <label class="wide news-file-label">Imagen<input type="file" data-project-image accept="image/png,image/jpeg,image/webp,image/gif"></label>
+        <label class="wide news-file-label">Imagen</label>
+        <div class="news-dropzone project-dropzone" data-project-dropzone role="button" tabindex="0" aria-label="Adjuntar imagen al proyecto">
+          <input type="file" data-project-image accept="image/png,image/jpeg,image/webp,image/gif">
+          <div class="news-dropzone-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 16V4"></path>
+              <path d="M7 9l5-5 5 5"></path>
+              <path d="M20 16.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2.5"></path>
+            </svg>
+          </div>
+          <strong>Arrastra una imagen aquí</strong>
+          <span>o toca para elegir PNG, JPG, WebP o GIF</span>
+        </div>
+        <div class="news-image-preview project-image-preview" data-project-preview hidden></div>
         <div class="news-editor-actions">
           <button type="button" class="news-delete" data-project-delete hidden>Eliminar</button>
           <button type="button" class="news-cancel" data-project-cancel>Cancelar</button>
@@ -2133,14 +2219,55 @@ function initProjectPosts() {
 
     adminPanel.querySelector('[data-project-compose]')?.addEventListener('click', () => openProjectEditor());
     adminPanel.querySelector('[data-project-cancel]')?.addEventListener('click', resetProjectEditor);
-    adminPanel.querySelector('[data-project-image]')?.addEventListener('change', (event) => {
-      selectedProjectImage = event.currentTarget.files?.[0] || null;
+    const imageInput = adminPanel.querySelector('[data-project-image]');
+    const dropzone = adminPanel.querySelector('[data-project-dropzone]');
+    imageInput?.addEventListener('change', (event) => {
+      const file = event.currentTarget.files?.[0] || null;
+      selectedProjectImage = file;
+      const preview = editorForm.querySelector('[data-project-preview]');
+      if (!preview) return;
+      if (!file) {
+        preview.hidden = true;
+        preview.innerHTML = '';
+        return;
+      }
+      const previewUrl = URL.createObjectURL(file);
+      preview.hidden = false;
+      preview.innerHTML = `<img src="${previewUrl}" alt=""><span>${escapeHtmlValue(file.name)}</span>`;
+    });
+    dropzone?.addEventListener('click', () => imageInput?.click());
+    dropzone?.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      imageInput?.click();
+    });
+    dropzone?.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      dropzone.classList.add('is-dragging');
+    });
+    dropzone?.addEventListener('dragleave', () => {
+      dropzone.classList.remove('is-dragging');
+    });
+    dropzone?.addEventListener('drop', (event) => {
+      event.preventDefault();
+      dropzone.classList.remove('is-dragging');
+      const file = event.dataTransfer?.files?.[0];
+      if (!file || !file.type.startsWith('image/')) {
+        statusText.textContent = 'Solo puedes adjuntar imágenes.';
+        return;
+      }
+      setProjectImageFile(file);
     });
     adminPanel.querySelector('[data-project-delete]')?.addEventListener('click', async () => {
       const id = editorForm?.querySelector('[data-project-id]').value;
-      if (!id || !client || !isAdmin) return;
+      if (!id || !client || !isAdmin) {
+        statusText.textContent = 'Primero inicia sesión como admin.';
+        return;
+      }
+      statusText.textContent = 'Eliminando proyecto...';
       const { error } = await client.from('project_posts').delete().eq('id', id);
       if (error) {
+        console.error('Project delete failed:', error);
         statusText.textContent = 'No se pudo eliminar el proyecto.';
         return;
       }
@@ -2151,7 +2278,15 @@ function initProjectPosts() {
 
     editorForm?.addEventListener('submit', async (event) => {
       event.preventDefault();
-      if (!client || !isAdmin) return;
+      if (!client) {
+        statusText.textContent = 'No se pudo conectar con Supabase.';
+        return;
+      }
+      if (!isAdmin) {
+        statusText.textContent = 'Primero inicia sesión como admin.';
+        openAccountFromProjects();
+        return;
+      }
       const id = editorForm.querySelector('[data-project-id]').value;
       const existing = projectItems.find((item) => item.id === id);
       let imageUrl = existing?.imageUrl || '';
@@ -2182,9 +2317,11 @@ function initProjectPosts() {
       const request = id
         ? client.from('project_posts').update(payload).eq('id', id)
         : client.from('project_posts').insert(payload);
+      statusText.textContent = id ? 'Actualizando proyecto...' : 'Guardando proyecto...';
       const { error } = await request;
       if (error) {
-        statusText.textContent = 'Supabase rechazó el proyecto. Revisa RLS o la tabla project_posts.';
+        console.error('Project save failed:', error);
+        statusText.textContent = `Supabase rechazó el proyecto (${error.code || 'error'}). Revisa RLS o project_posts.`;
         return;
       }
       statusText.textContent = 'Proyecto guardado.';
@@ -2206,6 +2343,10 @@ function initProjectPosts() {
   subscribeGatochenteAccount(({ isAdmin: nextIsAdmin }) => {
     isAdmin = Boolean(nextIsAdmin);
     if (adminPanel) adminPanel.hidden = !isAdmin;
+    if (adminToggle) {
+      adminToggle.classList.toggle('is-admin-ready', isAdmin);
+      adminToggle.querySelector('span').textContent = isAdmin ? 'Editar proyectos' : 'Iniciar sesión para editar';
+    }
     document.body.classList.toggle('projects-admin-active', isAdmin);
   });
 
@@ -2547,8 +2688,22 @@ function initNews() {
       .order('published_at', { ascending: false });
 
     if (error) {
-      newsItems = [...defaultNews];
-      setStatus('No se pudo cargar Supabase. Mostrando noticias locales.');
+      console.error('News load failed:', error);
+      const fallback = await supabaseClient
+        .from('news_posts')
+        .select('id,title,category,summary,body,published_at')
+        .order('published_at', { ascending: false });
+
+      if (fallback.error) {
+        console.error('News fallback load failed:', fallback.error);
+        newsItems = [...defaultNews];
+        setStatus(`No se pudo cargar Supabase (${fallback.error.code || 'error'}). Mostrando noticias locales.`);
+        renderNews();
+        return;
+      }
+
+      newsItems = (fallback.data || []).map(normalizePost);
+      setStatus('Supabase cargó noticias sin imagen. Ejecuta de nuevo supabase/news.sql para activar imágenes.');
       renderNews();
       return;
     }
