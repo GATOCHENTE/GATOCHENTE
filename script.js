@@ -1269,8 +1269,65 @@ function goToFishingCat() {
 }
 
 function initDonationModal() {
-  const modal = document.getElementById('donation-modal');
+  const scriptElement = document.querySelector('script[src*="script.js"]');
+  const assetBase = scriptElement ? scriptElement.src : window.location.href;
+  const assetUrl = (path) => new URL(path, assetBase).href;
+  let modal = document.getElementById('donation-modal');
   const openButtons = [...document.querySelectorAll('[data-paypal-modal]')];
+  if (!modal && openButtons.length) {
+    modal = document.createElement('div');
+    modal.className = 'donation-modal';
+    modal.id = 'donation-modal';
+    modal.setAttribute('aria-hidden', 'true');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'donation-title');
+    modal.innerHTML = `
+      <div class="donation-dialog">
+        <button type="button" class="donation-close" id="donation-close" aria-label="Cerrar donaciones">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6l12 12"></path>
+            <path d="M18 6l-12 12"></path>
+          </svg>
+        </button>
+        <div class="donation-cover" aria-hidden="true">
+          <img src="${assetUrl('img/banner.jpg')}" alt="">
+        </div>
+        <div class="donation-content">
+          <div class="donation-brand">
+            <img src="${assetUrl('logo.png')}" alt="">
+            <span>GATOCHENTE</span>
+          </div>
+          <h2 id="donation-title">Apoya a GATOCHENTE™ <span class="donation-title-icons">🐱🧡</span></h2>
+          <p>Tu apoyo ayuda a mantener vivos los proyectos, experimentos y nuevas ideas de este portafolio.</p>
+          <div class="donation-points" aria-label="Impacto del apoyo">
+            <span>Proyectos web</span>
+            <span>Electrónica</span>
+            <span>CatPack</span>
+          </div>
+          <div class="donation-payment-actions" aria-label="Opciones de donación">
+            <button type="button" class="donation-pay-option donation-paypal-option" data-donation-pay-url="https://www.paypal.com/ncp/payment/DHUX2QKEDJARN" aria-label="Deslizar para pagar con PayPal o tarjeta">
+              <span class="donation-pay-thumb" aria-hidden="true">
+                <img src="${assetUrl('img/PayPal.png')}" alt="">
+                <svg viewBox="0 0 24 24">
+                  <path d="M5 12h10"></path>
+                  <path d="M11 7l5 5-5 5"></path>
+                </svg>
+              </span>
+              <span class="donation-pay-label">Pagar con PayPal o tarjeta</span>
+              <span class="donation-pay-end" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M5 12h12"></path>
+                  <path d="M13 6l6 6-6 6"></path>
+                </svg>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
   const closeButton = document.getElementById('donation-close');
   const paySlider = modal ? modal.querySelector('[data-donation-pay-url]') : null;
   if (!modal || !openButtons.length) return;
@@ -2025,6 +2082,7 @@ function initProjectPosts() {
     })));
 
     if (projectsSection) {
+      projectsSection.classList.toggle('has-dynamic-projects', projectItems.length > 0);
       projectsSection.querySelectorAll('.project-dynamic-card').forEach((card) => card.remove());
       const anchor = adminPanel?.nextElementSibling || projectsSection.querySelector('.projects-heading')?.nextElementSibling || null;
       projectItems.forEach((item, index) => {
@@ -2049,6 +2107,21 @@ function initProjectPosts() {
       renderProjects();
       return;
     }
+
+    const rpcResult = await client.rpc('get_public_project_posts');
+    if (!rpcResult.error) {
+      projectItems = (rpcResult.data || []).map(normalizeProject);
+      if (statusText && isAdmin) {
+        statusText.textContent = projectItems.length
+          ? `${projectItems.length} proyecto${projectItems.length === 1 ? '' : 's'} cargado${projectItems.length === 1 ? '' : 's'}.`
+          : 'Todavía no hay proyectos dinámicos. Puedes agregar el primero.';
+      }
+      renderProjects();
+      return;
+    }
+
+    console.warn('Public project RPC unavailable, using table select:', rpcResult.error);
+
     const { data, error } = await client
       .from('project_posts')
       .select('id,title,category,summary,body,image_url,project_year,tags,created_at')
@@ -2681,6 +2754,16 @@ function initNews() {
       renderNews();
       return;
     }
+
+    const rpcResult = await supabaseClient.rpc('get_public_news_posts');
+    if (!rpcResult.error) {
+      newsItems = (rpcResult.data || []).map(normalizePost);
+      setStatus('');
+      renderNews();
+      return;
+    }
+
+    console.warn('Public news RPC unavailable, using table select:', rpcResult.error);
 
     const { data, error } = await supabaseClient
       .from('news_posts')

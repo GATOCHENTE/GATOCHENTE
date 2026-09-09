@@ -55,6 +55,8 @@ insert into storage.buckets (id, name, public)
 values ('gatochente-media', 'gatochente-media', true)
 on conflict (id) do nothing;
 
+notify pgrst, 'reload schema';
+
 drop policy if exists "Anyone can read GATOCHENTE media" on storage.objects;
 create policy "Anyone can read GATOCHENTE media"
 on storage.objects
@@ -100,6 +102,35 @@ on public.news_posts
 for select
 to anon, authenticated
 using (true);
+
+create or replace function public.get_public_news_posts()
+returns table (
+  id uuid,
+  title text,
+  category text,
+  summary text,
+  body text,
+  image_url text,
+  published_at timestamptz
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    news_posts.id,
+    news_posts.title,
+    news_posts.category,
+    news_posts.summary,
+    news_posts.body,
+    news_posts.image_url,
+    news_posts.published_at
+  from public.news_posts
+  order by news_posts.published_at desc;
+$$;
+
+revoke all on function public.get_public_news_posts() from public;
+grant execute on function public.get_public_news_posts() to anon, authenticated;
 
 drop policy if exists "Only GATOCHENTE can create news posts" on public.news_posts;
 create policy "Only GATOCHENTE can create news posts"
