@@ -2239,6 +2239,14 @@ function initProjectPosts() {
     if (!projectsSection || adminPanel) return;
     const heading = projectsSection.querySelector('.projects-heading');
     if (heading && !heading.querySelector('[data-project-admin-toggle]')) {
+      let headingActions = heading.querySelector('.projects-heading-actions');
+      if (!headingActions) {
+        headingActions = document.createElement('div');
+        headingActions.className = 'projects-heading-actions';
+        const supportButton = heading.querySelector('[data-paypal-modal]');
+        heading.appendChild(headingActions);
+        if (supportButton) headingActions.appendChild(supportButton);
+      }
       adminToggle = document.createElement('button');
       adminToggle.type = 'button';
       adminToggle.className = 'news-admin-button project-admin-toggle';
@@ -2250,7 +2258,7 @@ function initProjectPosts() {
         </svg>
         <span>Editar proyectos</span>
       `;
-      heading.appendChild(adminToggle);
+      headingActions.appendChild(adminToggle);
       adminToggle.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
