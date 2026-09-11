@@ -195,7 +195,7 @@ async function checkGatochenteAdminSession(session) {
     return !error && data === true;
   } catch (error) {
     console.error('Admin session check failed:', error);
-    return false;
+    return null;
   }
 }
 
@@ -239,7 +239,7 @@ function initGatochenteAccount() {
       </div>
     </div>
     <div class="account-nav-actions">
-      <a href="/noticias" data-account-link>Ir a cuenta</a>
+      <button type="button" data-account-panel-button>Cuenta</button>
       <button type="button" data-account-passkey-login>Passkey</button>
       <button type="button" data-account-passkey-register hidden>Crear passkey</button>
       <button type="button" data-account-logout hidden>Salir</button>
@@ -274,6 +274,15 @@ function initGatochenteAccount() {
     closeMenu();
   });
 
+  accountMenu.querySelector('[data-account-panel-button]')?.addEventListener('click', () => {
+    const message = accountMenu.querySelector('[data-account-message]');
+    if (message) {
+      message.textContent = gatochenteAccount.isAdmin
+        ? 'Cuenta admin activa. Ya puedes editar noticias y proyectos.'
+        : 'Inicia sesión aquí mismo para activar edición.';
+    }
+  });
+
   accountMenu.querySelector('[data-account-passkey-login]')?.addEventListener('click', async () => {
     const message = accountMenu.querySelector('[data-account-message]');
     if (!getPasskeySupport(client).canUse) {
@@ -291,10 +300,15 @@ function initGatochenteAccount() {
 
     const { data } = await withTimeout(client.auth.getSession(), 10000, 'No se pudo recuperar la sesión.');
     const isAdmin = await checkGatochenteAdminSession(data.session);
-    if (!isAdmin) {
+    if (isAdmin === false) {
       await client.auth.signOut();
       updateGatochenteAccount({ client, session: null, isAdmin: false });
       if (message) message.textContent = 'Esta passkey no tiene permisos.';
+      return;
+    }
+    if (isAdmin === null) {
+      if (message) message.textContent = 'Sesión iniciada, pero Supabase tardó en confirmar permisos. Reintentando...';
+      updateGatochenteAccount({ client, session: data.session, isAdmin: gatochenteAccount.isAdmin });
       return;
     }
 
@@ -348,10 +362,15 @@ function initGatochenteAccount() {
 
       const { data } = await withTimeout(client.auth.getSession(), 10000, 'No se pudo recuperar la sesión.');
       const isAdmin = await checkGatochenteAdminSession(data.session);
-      if (!isAdmin) {
+      if (isAdmin === false) {
         await client.auth.signOut();
         updateGatochenteAccount({ client, session: null, isAdmin: false });
         if (message) message.textContent = 'Esta cuenta no tiene permisos.';
+        return;
+      }
+      if (isAdmin === null) {
+        if (message) message.textContent = 'Sesión iniciada, esperando confirmación de permisos...';
+        updateGatochenteAccount({ client, session: data.session, isAdmin: gatochenteAccount.isAdmin });
         return;
       }
 
@@ -385,13 +404,13 @@ function initGatochenteAccount() {
       : '<span class="account-login-glyph" aria-hidden="true">\uE000</span>';
     const status = accountMenu.querySelector('[data-account-status]');
     const logout = accountMenu.querySelector('[data-account-logout]');
-    const link = accountMenu.querySelector('[data-account-link]');
+    const panelButton = accountMenu.querySelector('[data-account-panel-button]');
     const loginForm = accountMenu.querySelector('[data-account-login-form]');
     const passkeyLogin = accountMenu.querySelector('[data-account-passkey-login]');
     const passkeyRegister = accountMenu.querySelector('[data-account-passkey-register]');
-    if (status) status.textContent = isAdmin ? 'Sesión admin activa' : 'Entra para editar noticias';
+    if (status) status.textContent = isAdmin ? 'Sesión admin activa' : hasSession ? 'Verificando permisos de edición' : 'Entra para editar noticias';
     if (logout) logout.hidden = !hasSession;
-    if (link) link.textContent = hasSession ? 'Ir a cuenta' : 'Iniciar sesión';
+    if (panelButton) panelButton.textContent = hasSession ? 'Cuenta activa' : 'Iniciar sesión';
     if (loginForm) loginForm.hidden = hasSession;
     if (passkeyLogin) passkeyLogin.hidden = hasSession || !getPasskeySupport(client).canUse;
     if (passkeyRegister) passkeyRegister.hidden = !isAdmin || !getPasskeySupport(client).canUse;
@@ -399,12 +418,12 @@ function initGatochenteAccount() {
 
   client.auth.onAuthStateChange(async (_event, session) => {
     const isAdmin = await checkGatochenteAdminSession(session);
-    updateGatochenteAccount({ client, session, isAdmin });
+    updateGatochenteAccount({ client, session, isAdmin: isAdmin === null ? gatochenteAccount.isAdmin : isAdmin });
   });
 
   client.auth.getSession().then(async ({ data }) => {
     const isAdmin = await checkGatochenteAdminSession(data.session);
-    updateGatochenteAccount({ client, session: data.session, isAdmin });
+    updateGatochenteAccount({ client, session: data.session, isAdmin: isAdmin === null ? gatochenteAccount.isAdmin : isAdmin });
   });
 }
 
@@ -2801,7 +2820,8 @@ function initNews() {
       return;
     }
     const { data } = await supabaseClient.auth.getSession();
-    setAdminUnlocked(await checkGatochenteAdminSession(data.session));
+    const isAdmin = await checkGatochenteAdminSession(data.session);
+    setAdminUnlocked(isAdmin === null ? gatochenteAccount.isAdmin : isAdmin);
   }
 
   function resetEditor() {
@@ -2891,10 +2911,16 @@ function initNews() {
       }
 
       const { data } = await withTimeout(supabaseClient.auth.getSession(), 10000, 'No se pudo recuperar la sesión.');
-      if (!(await checkGatochenteAdminSession(data.session))) {
+      const isAdmin = await checkGatochenteAdminSession(data.session);
+      if (isAdmin === false) {
         await supabaseClient.auth.signOut();
         setStatus('Esta cuenta no tiene permisos para editar noticias.');
         setAdminUnlocked(false);
+        return;
+      }
+      if (isAdmin === null) {
+        setStatus('Sesión iniciada. Supabase está verificando permisos...');
+        updateGatochenteAccount({ client: supabaseClient, session: data.session, isAdmin: gatochenteAccount.isAdmin });
         return;
       }
 
@@ -2936,10 +2962,16 @@ function initNews() {
     }
 
     const { data } = await supabaseClient.auth.getSession();
-    if (!(await checkGatochenteAdminSession(data.session))) {
+    const isAdmin = await checkGatochenteAdminSession(data.session);
+    if (isAdmin === false) {
       await supabaseClient.auth.signOut();
       setStatus('Esta passkey no pertenece al admin.');
       setAdminUnlocked(false);
+      return;
+    }
+    if (isAdmin === null) {
+      setStatus('Sesión iniciada con passkey. Supabase está verificando permisos...');
+      updateGatochenteAccount({ client: supabaseClient, session: data.session, isAdmin: gatochenteAccount.isAdmin });
       return;
     }
 
@@ -3131,9 +3163,10 @@ function initNews() {
   if (supabaseClient) {
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
       const isAdmin = await checkGatochenteAdminSession(session);
-      updateGatochenteAccount({ client: supabaseClient, session, isAdmin });
+      const nextIsAdmin = isAdmin === null ? gatochenteAccount.isAdmin : isAdmin;
+      updateGatochenteAccount({ client: supabaseClient, session, isAdmin: nextIsAdmin });
       const shouldWelcome = isAdmin && event === 'SIGNED_IN' && !hasWelcomedSession;
-      setAdminUnlocked(isAdmin, { welcome: shouldWelcome });
+      setAdminUnlocked(nextIsAdmin, { welcome: shouldWelcome });
       if (shouldWelcome) hasWelcomedSession = true;
     });
   } else {

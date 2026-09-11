@@ -3331,14 +3331,17 @@ box-shadow:0 18px 38px rgba(74,44,24,0.16),var(--glass-inset);
 
 .support-cta-inline{
 
-margin:18px auto 0;
+display:flex;
+width:fit-content;
+max-width:100%;
+margin:26px auto 0;
 
 }
 
 .support-band{
 
 width:100%;
-padding:0 20px 56px;
+padding:14px 20px 56px;
 
 }
 
