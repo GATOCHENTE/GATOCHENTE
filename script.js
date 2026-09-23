@@ -1829,7 +1829,7 @@ function initProjectCards() {
   if (!projectsSection) return;
 
   function getProjectCards() {
-    return [...projectsSection.querySelectorAll('.card[id]:not([data-project-preview="false"])')];
+    return [...projectsSection.querySelectorAll('.card[id]')];
   }
 
   const modal = document.createElement('div');
