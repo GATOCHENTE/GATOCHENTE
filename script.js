@@ -1829,7 +1829,7 @@ function initProjectCards() {
   if (!projectsSection) return;
 
   function getProjectCards() {
-    return [...projectsSection.querySelectorAll('.card[id]')];
+    return [...projectsSection.querySelectorAll('.card[id]:not([data-project-preview="false"])')];
   }
 
   const modal = document.createElement('div');
@@ -4039,7 +4039,45 @@ function initAsciiNegativeHero() {
   }
 }
 
+function initProjectCountdowns() {
+  const countdowns = document.querySelectorAll('[data-countdown]');
+  if (!countdowns.length) return;
+
+  const formatter = new Intl.NumberFormat('es-CL', { minimumIntegerDigits: 2, useGrouping: false });
+
+  countdowns.forEach((countdown) => {
+    const target = new Date(countdown.dataset.countdown);
+    if (Number.isNaN(target.getTime())) return;
+
+    const days = countdown.querySelector('[data-countdown-days]');
+    const hours = countdown.querySelector('[data-countdown-hours]');
+    const minutes = countdown.querySelector('[data-countdown-minutes]');
+    const seconds = countdown.querySelector('[data-countdown-seconds]');
+
+    const update = () => {
+      let remaining = Math.max(0, target.getTime() - Date.now());
+      const finished = remaining === 0;
+      const dayValue = Math.floor(remaining / 86400000);
+      remaining %= 86400000;
+      const hourValue = Math.floor(remaining / 3600000);
+      remaining %= 3600000;
+      const minuteValue = Math.floor(remaining / 60000);
+      const secondValue = Math.floor((remaining % 60000) / 1000);
+
+      if (days) days.textContent = formatter.format(dayValue);
+      if (hours) hours.textContent = formatter.format(hourValue);
+      if (minutes) minutes.textContent = formatter.format(minuteValue);
+      if (seconds) seconds.textContent = formatter.format(secondValue);
+      if (finished) countdown.setAttribute('aria-label', 'La espera terminó: el proyecto sorpresa ya está disponible.');
+    };
+
+    update();
+    window.setInterval(update, 1000);
+  });
+}
+
 initAsciiNegativeHero();
+initProjectCountdowns();
 initContactForm();
 initProtectedEmailButtons();
 initDonationModal();
