@@ -1,4 +1,4 @@
-﻿const CACHE_VERSION = "gatochente-v183";
+const CACHE_VERSION = "gatochente-v194";
 const APP_SHELL_FILES = [
 	"./",
 	"./index.html",
@@ -120,6 +120,5 @@ self.addEventListener("fetch", (event) => {
 			)
 	);
 });
-
 
 

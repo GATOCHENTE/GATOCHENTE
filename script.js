@@ -224,7 +224,8 @@ function initGatochenteAccount() {
   accountButton.className = 'account-nav-button';
   accountButton.setAttribute('aria-label', 'Iniciar sesión en GATOCHENTE Account');
   accountButton.setAttribute('aria-expanded', 'false');
-  accountButton.innerHTML = '<span class="account-login-glyph" aria-hidden="true">\uE000</span>';
+  const loginIcon = '<svg class="account-login-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg>';
+  accountButton.innerHTML = loginIcon;
 
   const accountMenu = document.createElement('div');
   accountMenu.className = 'account-nav-menu';
@@ -401,7 +402,7 @@ function initGatochenteAccount() {
     accountButton.setAttribute('aria-label', hasSession ? 'Abrir GATOCHENTE Account' : 'Iniciar sesión en GATOCHENTE Account');
     accountButton.innerHTML = hasSession
       ? `<img src="${avatarUrl}" alt="">`
-      : '<span class="account-login-glyph" aria-hidden="true">\uE000</span>';
+      : loginIcon;
     const status = accountMenu.querySelector('[data-account-status]');
     const logout = accountMenu.querySelector('[data-account-logout]');
     const panelButton = accountMenu.querySelector('[data-account-panel-button]');
@@ -1848,9 +1849,11 @@ function initProjectCards() {
       </button>
       <div class="project-modal-media">
         <img src="" alt="">
+        <div class="project-modal-lock" hidden aria-hidden="true"></div>
       </div>
       <div class="project-modal-content">
         <p class="project-modal-kicker"></p>
+        <p class="project-modal-status" hidden>Proyecto próximamente · Bloqueado</p>
         <h2 id="project-modal-title"></h2>
         <p class="project-modal-description"></p>
         <div class="project-modal-notes"></div>
@@ -1863,6 +1866,9 @@ function initProjectCards() {
 
   const closeButton = modal.querySelector('.project-close');
   const mediaImage = modal.querySelector('.project-modal-media img');
+  const mediaFrame = modal.querySelector('.project-modal-media');
+  const mediaLock = modal.querySelector('.project-modal-lock');
+  const projectStatus = modal.querySelector('.project-modal-status');
   const kicker = modal.querySelector('.project-modal-kicker');
   const title = modal.querySelector('#project-modal-title');
   const description = modal.querySelector('.project-modal-description');
@@ -1871,7 +1877,7 @@ function initProjectCards() {
   const collaborators = modal.querySelector('.project-modal-collaborators');
 
   function getProjectData(card) {
-    const img = card.querySelector(':scope > img');
+    const img = card.querySelector(':scope > img') || card.querySelector('.project-gatoretiro-preview img');
     return {
       id: card.id,
       image: img ? img.getAttribute('src') : '',
@@ -1891,6 +1897,23 @@ function initProjectCards() {
 
     mediaImage.src = data.image;
     mediaImage.alt = data.imageAlt || data.title;
+    const isLockedProject = card.id === 'gatoretiro';
+    mediaFrame.classList.toggle('is-locked', isLockedProject);
+    projectStatus.hidden = !isLockedProject;
+    mediaLock.hidden = !isLockedProject;
+    mediaLock.replaceChildren();
+    if (isLockedProject) {
+      const originalLock = card.querySelector('.project-gatoretiro-lock svg');
+      if (originalLock) {
+        const modalLock = originalLock.cloneNode(true);
+        const modalLockTitle = modalLock.querySelector('title');
+        if (modalLockTitle) {
+          modalLockTitle.id = 'gatoretiro-modal-lock-title';
+          modalLock.setAttribute('aria-labelledby', modalLockTitle.id);
+        }
+        mediaLock.append(modalLock);
+      }
+    }
     kicker.textContent = data.kicker;
     title.textContent = data.title;
     description.textContent = data.description;
@@ -1911,7 +1934,7 @@ function initProjectCards() {
       data.collaborators.querySelectorAll('.user-chip').forEach((chip) => {
         chip.setAttribute('role', 'button');
         chip.setAttribute('tabindex', '0');
-        chip.setAttribute('aria-label', `Abrir perfil completo de ${chip.textContent.trim()}`);
+        chip.setAttribute('aria-label', chip.dataset.user ? `Abrir perfil completo de @${chip.dataset.user}` : `Abrir perfil completo de ${chip.textContent.trim()}`);
       });
       collaborators.replaceChildren(data.collaborators);
     } else {
@@ -2101,7 +2124,11 @@ function initProjectPosts() {
     })));
 
     if (projectsSection) {
+      const dynamicCatPack = projectItems.some((item) => item.title.trim().toLocaleLowerCase('es') === 'catpack');
       projectsSection.classList.toggle('has-dynamic-projects', projectItems.length > 0);
+      projectsSection.classList.toggle('has-dynamic-catpack', dynamicCatPack);
+      const staticCatPack = projectsSection.querySelector(':scope > #catpack');
+      if (staticCatPack) staticCatPack.hidden = dynamicCatPack;
       projectsSection.querySelectorAll('.project-dynamic-card').forEach((card) => card.remove());
       const anchor = adminPanel?.nextElementSibling || projectsSection.querySelector('.projects-heading')?.nextElementSibling || null;
       projectItems.forEach((item, index) => {
@@ -3187,7 +3214,7 @@ function initNews() {
 }
 
 function initProfileChips() {
-  const chips = document.querySelectorAll('.user-chip[data-user="gatochente"]');
+  const chips = document.querySelectorAll('.user-chip[data-user="gatochente"], .user-chip[data-user="waos"], .user-chip[data-user="zen"]');
   if (!chips.length) return;
 
   const modal = document.createElement('div');
@@ -3203,57 +3230,34 @@ function initProfileChips() {
   const bannerUrl = new URL('img/banner.jpg', assetBase).href;
   const checkBadgeUrl = new URL('img/check.PNG', assetBase).href;
   const catSocialUrl = new URL('img/catsocial.PNG', assetBase).href;
+  const collaboratorProfiles = {
+    waos: { name: 'Alonso Bustamante', handle: '@waos', bio: 'Uno de los amigos de Chente, esta es su primera vez en el portafolio con el proyecto “GatoRetiro™”.' },
+    zen: { name: 'Alonso Figueroa', handle: '@zen', bio: 'Amigo de Chente y colaborador de GatoRetiro™, participando por primera vez en un proyecto presentado dentro del portafolio.' }
+  };
 
   modal.innerHTML = `
     <div class="profile-dialog">
       <button type="button" class="profile-close" aria-label="Cerrar perfil">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M6 6l12 12"></path>
-          <path d="M18 6l-12 12"></path>
-        </svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6l-12 12"></path></svg>
       </button>
-      <div class="profile-cover" aria-hidden="true">
-        <img src="${bannerUrl}" alt="">
-      </div>
+      <div class="profile-cover" aria-hidden="true"><img src="${bannerUrl}" alt=""></div>
       <div class="profile-header">
         <img class="profile-avatar" src="${avatarUrl}" alt="Foto de perfil de GATOCHENTE">
+        <span class="profile-avatar-placeholder user-avatar user-avatar-generated user-avatar-waos" data-profile-avatar="waos" aria-label="Avatar generado de Alonso Bustamante" hidden><span class="user-avatar-letter">A</span></span>
+        <span class="profile-avatar-placeholder user-avatar user-avatar-generated user-avatar-zen" data-profile-avatar="zen" aria-label="Avatar generado de Alonso Figueroa" hidden><span class="user-avatar-letter">A</span></span>
         <div class="profile-title-group">
           <span class="profile-eyebrow">Perfil completo</span>
           <h2 id="profile-modal-title">GATOCHENTE</h2>
-          <div class="profile-handle-row">
-            <span>@gatochente</span>
-            <button type="button" class="verification-badge profile-verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver términos de la insignia">
-              <img src="${checkBadgeUrl}" alt="Verificado">
-            </button>
-          </div>
+          <div class="profile-handle-row"><span>@gatochente</span><button type="button" class="verification-badge profile-verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver términos de la insignia"><img src="${checkBadgeUrl}" alt="Verificado"></button></div>
         </div>
       </div>
-      <p class="profile-bio">
-        Estudiante creador de proyectos con tecnología, programación, Arduino, Raspberry Pi y diseño web. Aquí se conectan mis prototipos, ideas escolares y futuras experiencias sociales.
-      </p>
+      <p class="profile-bio">Estudiante creador de proyectos con tecnología, programación, Arduino, Raspberry Pi y diseño web. Aquí se conectan mis prototipos, ideas escolares y futuras experiencias sociales.</p>
       <div class="profile-stats" aria-label="Resumen del perfil">
-        <div>
-          <strong>3</strong>
-          <span>Proyectos</span>
-        </div>
-        <div>
-          <strong>2026</strong>
-          <span>Construyendo</span>
-        </div>
-        <div>
-          <strong>CatSocial</strong>
-          <span>Proximamente</span>
-        </div>
+        <div><strong>3</strong><span>Proyectos</span></div><div><strong>2026</strong><span>Construyendo</span></div><div><strong>CatSocial</strong><span>Próximamente</span></div>
       </div>
-      <button type="button" class="catsocial-button" disabled aria-disabled="true">
-        <img src="${catSocialUrl}" alt="">
-        <span>Ver en CatSocial</span>
-        <strong>Proximamente</strong>
-      </button>
-    </div>
-  `;
+      <button type="button" class="catsocial-button" disabled aria-disabled="true"><img src="${catSocialUrl}" alt=""><span>Ver en CatSocial</span><strong>Próximamente</strong></button>
+    </div>`;
   document.body.appendChild(modal);
-
   const closeButton = modal.querySelector('.profile-close');
 
   function openProfileModal() {
@@ -3270,45 +3274,84 @@ function initProfileChips() {
   function prepareChip(chip) {
     chip.setAttribute('role', 'button');
     chip.setAttribute('tabindex', '0');
-    chip.setAttribute('aria-label', 'Abrir perfil completo de GATOCHENTE');
+    const profile = collaboratorProfiles[chip.dataset.user];
+    chip.setAttribute('aria-label', profile ? `Abrir información de ${profile.name} (${profile.handle})` : 'Abrir perfil completo de GATOCHENTE');
+  }
+
+  function resetProfileModal() {
+    modal.querySelector('.profile-eyebrow').textContent = 'Perfil completo';
+    modal.querySelector('#profile-modal-title').textContent = 'GATOCHENTE';
+    const row = modal.querySelector('.profile-handle-row');
+    row.classList.remove('collaborator-profile-handle');
+    row.replaceChildren();
+    const handle = document.createElement('span');
+    handle.textContent = '@gatochente';
+    const badge = document.createElement('button');
+    badge.type = 'button';
+    badge.className = 'verification-badge profile-verification-badge';
+    badge.dataset.tooltip = 'Verificado';
+    badge.setAttribute('aria-label', 'Verificado: ver términos de la insignia');
+    const image = document.createElement('img');
+    image.src = checkBadgeUrl;
+    image.alt = 'Verificado';
+    badge.append(image);
+    row.append(handle, badge);
+    modal.querySelector('.profile-avatar').hidden = false;
+    modal.querySelector('.profile-header').classList.remove('has-generated-avatar');
+    modal.querySelectorAll('.profile-avatar-placeholder').forEach((avatar) => { avatar.hidden = true; });
+    modal.querySelector('.profile-bio').textContent = 'Estudiante creador de proyectos con tecnología, programación, Arduino, Raspberry Pi y diseño web. Aquí se conectan mis prototipos, ideas escolares y futuras experiencias sociales.';
+    modal.querySelector('.profile-stats').hidden = false;
+    modal.querySelector('.catsocial-button').hidden = false;
+  }
+
+  function openCollaboratorProfile(user) {
+    const profile = collaboratorProfiles[user];
+    if (!profile) return;
+    modal.querySelector('.profile-eyebrow').textContent = 'Colaborador de GatoRetiro™';
+    modal.querySelector('#profile-modal-title').textContent = profile.name;
+    const row = modal.querySelector('.profile-handle-row');
+    row.classList.add('collaborator-profile-handle');
+    row.textContent = profile.handle;
+    modal.querySelector('.profile-avatar').hidden = true;
+    modal.querySelector('.profile-header').classList.add('has-generated-avatar');
+    const collaboratorAvatar = modal.querySelector(`[data-profile-avatar="${user}"]`);
+    if (collaboratorAvatar) collaboratorAvatar.setAttribute('aria-label', `Avatar generado de ${profile.name}`);
+    modal.querySelectorAll('.profile-avatar-placeholder').forEach((avatar) => { avatar.hidden = avatar.dataset.profileAvatar !== user; });
+    modal.querySelector('.profile-bio').textContent = profile.bio;
+    modal.querySelector('.profile-stats').hidden = true;
+    modal.querySelector('.catsocial-button').hidden = false;
+    openProfileModal();
   }
 
   chips.forEach(prepareChip);
-
   document.addEventListener('click', (event) => {
-    const chip = event.target instanceof Element ? event.target.closest('.user-chip[data-user="gatochente"]') : null;
-    if (!chip || (event.target instanceof Element && event.target.closest('.verification-badge'))) return;
-
+    const chip = event.target instanceof Element ? event.target.closest('.user-chip[data-user]') : null;
+    if (!chip || !document.body.contains(chip) || (event.target instanceof Element && event.target.closest('.verification-badge'))) return;
     prepareChip(chip);
-    openProfileModal();
+    if (collaboratorProfiles[chip.dataset.user]) openCollaboratorProfile(chip.dataset.user);
+    else if (chip.dataset.user === 'gatochente') { resetProfileModal(); openProfileModal(); }
   });
-
   document.addEventListener('keydown', (event) => {
-    const chip = event.target instanceof Element ? event.target.closest('.user-chip[data-user="gatochente"]') : null;
+    const chip = event.target instanceof Element ? event.target.closest('.user-chip[data-user]') : null;
     if (!chip || (event.target instanceof Element && event.target.closest('.verification-badge'))) return;
     if (event.key !== 'Enter' && event.key !== ' ') return;
-
     event.preventDefault();
     prepareChip(chip);
-    openProfileModal();
+    if (collaboratorProfiles[chip.dataset.user]) openCollaboratorProfile(chip.dataset.user);
+    else if (chip.dataset.user === 'gatochente') { resetProfileModal(); openProfileModal(); }
   });
-
-  closeButton.addEventListener('click', closeProfileModal);
-
+  closeButton.addEventListener('click', () => { closeProfileModal(); resetProfileModal(); });
   modal.addEventListener('click', (event) => {
-    if (event.target === modal) {
-      closeProfileModal();
-    }
+    if (event.target === modal) { closeProfileModal(); resetProfileModal(); }
   });
-
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && modal.classList.contains('is-open')) {
       if (document.querySelector('.verification-modal.is-open')) return;
       closeProfileModal();
+      resetProfileModal();
     }
   });
 }
-
 function initMiniGame() {
   const board = document.getElementById('game-board');
   const player = document.getElementById('game-player');
@@ -4042,40 +4085,48 @@ function initAsciiNegativeHero() {
 function initProjectCountdowns() {
   const countdowns = document.querySelectorAll('[data-countdown]');
   if (!countdowns.length) return;
-
   const formatter = new Intl.NumberFormat('es-CL', { minimumIntegerDigits: 2, useGrouping: false });
 
   countdowns.forEach((countdown) => {
     const target = new Date(countdown.dataset.countdown);
     if (Number.isNaN(target.getTime())) return;
-
     const days = countdown.querySelector('[data-countdown-days]');
     const hours = countdown.querySelector('[data-countdown-hours]');
     const minutes = countdown.querySelector('[data-countdown-minutes]');
     const seconds = countdown.querySelector('[data-countdown-seconds]');
 
     const update = () => {
-      let remaining = Math.max(0, target.getTime() - Date.now());
-      const finished = remaining === 0;
-      const dayValue = Math.floor(remaining / 86400000);
-      remaining %= 86400000;
-      const hourValue = Math.floor(remaining / 3600000);
-      remaining %= 3600000;
-      const minuteValue = Math.floor(remaining / 60000);
-      const secondValue = Math.floor((remaining % 60000) / 1000);
-
+      const remaining = Math.max(0, target.getTime() - Date.now());
+      if (remaining === 0) {
+        if (countdown.dataset.countdownComplete === 'true') return;
+        const finishedText = countdown.dataset.countdownFinished || 'Disponible';
+        countdown.replaceChildren();
+        const status = document.createElement('strong');
+        status.className = 'project-countdown-finished';
+        status.textContent = finishedText;
+        countdown.append(status);
+        countdown.setAttribute('aria-label', `${finishedText}: la fecha de lanzamiento ya llegó.`);
+        countdown.dataset.countdownComplete = 'true';
+        const statusLine = countdown.parentElement?.querySelector('[data-countdown-status]');
+        if (statusLine) statusLine.textContent = finishedText;
+        return;
+      }
+      let parts = remaining;
+      const dayValue = Math.floor(parts / 86400000);
+      parts %= 86400000;
+      const hourValue = Math.floor(parts / 3600000);
+      parts %= 3600000;
+      const minuteValue = Math.floor(parts / 60000);
+      const secondValue = Math.floor((parts % 60000) / 1000);
       if (days) days.textContent = formatter.format(dayValue);
       if (hours) hours.textContent = formatter.format(hourValue);
       if (minutes) minutes.textContent = formatter.format(minuteValue);
       if (seconds) seconds.textContent = formatter.format(secondValue);
-      if (finished) countdown.setAttribute('aria-label', 'La espera terminó: el proyecto sorpresa ya está disponible.');
     };
-
     update();
-    window.setInterval(update, 1000);
+    if (countdown.dataset.countdownComplete !== 'true') window.setInterval(update, 1000);
   });
 }
-
 initAsciiNegativeHero();
 initProjectCountdowns();
 initContactForm();
