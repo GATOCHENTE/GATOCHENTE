@@ -1883,7 +1883,7 @@ function initProjectCards() {
       image: img ? img.getAttribute('src') : '',
       imageAlt: img ? img.getAttribute('alt') : '',
       kicker: card.querySelector('.card-kicker')?.textContent.trim() || '',
-      title: card.querySelector('h3')?.textContent.trim() || '',
+      title: card.querySelector('h3')?.dataset.projectTitle || card.querySelector('h3')?.textContent.trim() || '',
       description: card.querySelector(':scope > p:not(.card-kicker)')?.textContent.trim() || '',
       notes: [...card.querySelectorAll('.project-notes p')].map((item) => item.textContent.trim()),
       tags: [...card.querySelectorAll('.card-tags span')].map((item) => item.textContent.trim()),
@@ -1915,7 +1915,15 @@ function initProjectCards() {
       }
     }
     kicker.textContent = data.kicker;
-    title.textContent = data.title;
+    const cardLogo = card.querySelector('.project-guardian-logo');
+    if (cardLogo) {
+      const modalLogo = cardLogo.cloneNode(true);
+      title.replaceChildren(modalLogo);
+      title.setAttribute('aria-label', data.title);
+    } else {
+      title.textContent = data.title;
+      title.removeAttribute('aria-label');
+    }
     description.textContent = data.description;
 
     notes.replaceChildren(...data.notes.map((noteText) => {
@@ -1959,7 +1967,8 @@ function initProjectCards() {
   function prepareProjectCard(card) {
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
-    card.setAttribute('aria-label', `Ver proyecto ${card.querySelector('h3')?.textContent.trim() || ''}`);
+    const cardTitle = card.querySelector('h3');
+    card.setAttribute('aria-label', `Ver proyecto ${cardTitle?.dataset.projectTitle || cardTitle?.textContent.trim() || ''}`);
   }
 
   getProjectCards().forEach(prepareProjectCard);
@@ -2068,11 +2077,12 @@ function initProjectPosts() {
 
   function createProjectCard(item, index) {
     const article = document.createElement('article');
+    const isCatPack = item.title.trim().toLocaleLowerCase('es') === 'catpack';
     article.className = index === 0 ? 'card project-featured project-dynamic-card' : 'card project-dynamic-card';
     article.id = item.slug;
     article.dataset.projectId = item.id;
     article.innerHTML = `
-      ${index === 0 ? '<span class="project-recent-label">Proyecto reciente</span>' : ''}
+      ${index === 0 && !isCatPack ? '<span class="project-recent-label">Proyecto reciente</span>' : ''}
       <button type="button" class="project-edit-button" data-project-edit="${escapeHtmlValue(item.id)}" aria-label="Editar proyecto">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
       </button>

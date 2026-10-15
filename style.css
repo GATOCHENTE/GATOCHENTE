@@ -4999,6 +4999,14 @@ order:1;
 
 }
 
+.card.project-guardian-card{order:1;}
+.project-guardian-heading{display:flex;align-items:center;min-height:58px;}
+.project-guardian-logo{position:relative;display:block;overflow:hidden;aspect-ratio:4.4/1;width:min(calc(100% + 64px),440px);margin-left:-32px;}
+.project-guardian-logo img{position:absolute;top:0;left:0;display:none;width:100%;height:auto;object-fit:contain;transform:translateY(-29.17%);}
+html:not([data-theme="dark"]) .project-guardian-logo-light,
+html[data-theme="dark"] .project-guardian-logo-dark{display:block;}
+.project-modal-content .project-guardian-logo{width:min(calc(100% + 64px),440px);margin:0 0 14px -32px;}
+
 .project-countdown{
 
 display:grid;
@@ -5188,7 +5196,8 @@ text-align:center;
 
 }
 
-.project-gatoretiro-collaborators{
+.project-gatoretiro-collaborators,
+.project-guardian-collaborators{
 
 padding:14px 0 0;
 border-top:1px solid rgba(31,122,140,0.13);
@@ -7446,7 +7455,7 @@ display:inline-flex;
 
 }
 
-.projects.has-dynamic-projects > .card:not(.project-dynamic-card):not(#catpack):not(#gatoretiro){
+.projects.has-dynamic-projects > .card:not(.project-dynamic-card):not(#catpack):not(#gatoretiro):not(#proyecto-guardian){
 
 display:none;
 
