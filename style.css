@@ -5000,6 +5000,7 @@ order:1;
 }
 
 .card.project-guardian-card{order:1;}
+.projects > .card.project-dynamic-card{order:2;}
 .project-guardian-heading{display:flex;align-items:center;min-height:58px;}
 .project-guardian-logo{position:relative;display:block;overflow:hidden;aspect-ratio:4.4/1;width:min(calc(100% + 64px),440px);margin-left:-32px;}
 .project-guardian-logo img{position:absolute;top:0;left:0;display:none;width:100%;height:auto;object-fit:contain;transform:translateY(-29.17%);}
