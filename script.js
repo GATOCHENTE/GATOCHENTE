@@ -27,55 +27,34 @@ function initSkillsCarousel() {
   if (!carousel || !modal) return;
 
   const track = carousel.querySelector('.skills-track:not([aria-hidden="true"])');
-  const dialog = modal.querySelector('.skill-dialog');
   const title = modal.querySelector('#skill-modal-title');
   const description = modal.querySelector('#skill-modal-description');
   const closeButton = modal.querySelector('.skill-modal-close');
-  const duplicateTrack = carousel.querySelector('.skills-track[aria-hidden="true"]');
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const isAnimated = () => !modal.classList.contains('is-open') && !reduceMotion.matches && !carousel.matches(':hover') && !carousel.matches(':focus-within') && !carousel.classList.contains('is-dragging');
-  const loopWidth = () => track ? track.getBoundingClientRect().width : 0;
   let activeCard = null;
   let dragState = null;
   let pointerMoved = false;
-  let offset = 0;
-  let previousFrame = 0;
-  let animationFrame = 0;
 
-  carousel.classList.add('is-scripted');
-  carousel.style.setProperty('--skills-offset', '0px');
-
-  function animateSkills(time) {
-    if (previousFrame && isAnimated()) {
-      offset += (time - previousFrame) * 0.035;
-      const width = loopWidth();
-      if (width && offset >= width) offset %= width;
-      carousel.style.setProperty('--skills-offset', `${offset}px`);
-      if (duplicateTrack) duplicateTrack.style.transform = `translateX(${-offset}px)`;
-    }
-    previousFrame = time;
-    animationFrame = window.requestAnimationFrame(animateSkills);
+  function loopWidth() {
+    return track ? track.getBoundingClientRect().width : 0;
   }
 
-  function setOffset(nextOffset) {
+  function normalizeScroll() {
     const width = loopWidth();
-    offset = width ? ((nextOffset % width) + width) % width : 0;
-    carousel.style.setProperty('--skills-offset', `${offset}px`);
-    if (duplicateTrack) duplicateTrack.style.transform = `translateX(${-offset}px)`;
+    if (width && carousel.scrollLeft >= width) carousel.scrollLeft -= width;
   }
-
-  animationFrame = window.requestAnimationFrame(animateSkills);
-  reduceMotion.addEventListener?.('change', () => { previousFrame = 0; });
 
   carousel.addEventListener('wheel', (event) => {
-    event.preventDefault();
     const delta = Math.abs(event.deltaY) > Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
-    setOffset(offset + delta);
+    if (!delta) return;
+    event.preventDefault();
+    carousel.scrollLeft += delta;
+    normalizeScroll();
   }, { passive: false });
+  carousel.addEventListener('scroll', normalizeScroll, { passive: true });
 
   carousel.addEventListener('pointerdown', (event) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
-    dragState = { x: event.clientX, offset, pointerId: event.pointerId };
+    dragState = { x: event.clientX, scrollLeft: carousel.scrollLeft, pointerId: event.pointerId };
     pointerMoved = false;
   });
 
@@ -88,10 +67,8 @@ function initSkillsCarousel() {
       carousel.setPointerCapture(event.pointerId);
     }
     if (pointerMoved) {
-      const width = loopWidth();
-      offset = width ? ((dragState.offset - distance) % width + width) % width : 0;
-      carousel.style.setProperty('--skills-offset', `${offset}px`);
-      if (duplicateTrack) duplicateTrack.style.transform = `translateX(${-offset}px)`;
+      carousel.scrollLeft = dragState.scrollLeft - distance;
+      normalizeScroll();
     }
   });
 
@@ -110,9 +87,9 @@ function initSkillsCarousel() {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
     if (event.target.closest('.skill-logo-card')) return;
     event.preventDefault();
-    if (event.key === 'Home') setOffset(0);
-    else if (event.key === 'End') setOffset(loopWidth() - carousel.clientWidth);
-    else setOffset(offset + (event.key === 'ArrowRight' ? 180 : -180));
+    if (event.key === 'Home') carousel.scrollLeft = 0;
+    else if (event.key === 'End') carousel.scrollLeft = Math.max(0, loopWidth() - carousel.clientWidth);
+    else carousel.scrollBy({ left: event.key === 'ArrowRight' ? 180 : -180, behavior: 'smooth' });
   });
 
   carousel.addEventListener('click', (event) => {
@@ -124,35 +101,21 @@ function initSkillsCarousel() {
     activeCard = card;
     title.textContent = skillTitle;
     description.textContent = skillDescription;
-    modal.classList.add('is-open');
-    modal.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('modal-open');
-    document.documentElement.classList.add('modal-open');
+    carousel.classList.add('modal-is-open');
+    if (!modal.open) modal.showModal();
     closeButton.focus();
   });
 
-  function closeSkillModal() {
-    if (!modal.classList.contains('is-open')) return;
-    modal.classList.remove('is-open');
-    modal.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('modal-open');
-    document.documentElement.classList.remove('modal-open');
+  closeButton.addEventListener('click', () => modal.close());
+  modal.addEventListener('click', (event) => {
+    if (event.target !== modal) return;
+    const rect = modal.getBoundingClientRect();
+    if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) modal.close();
+  });
+  modal.addEventListener('close', () => {
+    carousel.classList.remove('modal-is-open');
     if (activeCard && activeCard.isConnected) activeCard.focus();
     activeCard = null;
-  }
-
-  modal.addEventListener('click', (event) => {
-    if (event.target.closest('[data-skill-close]')) closeSkillModal();
-  });
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && modal.classList.contains('is-open')) { event.stopPropagation(); closeSkillModal(); }
-    if (event.key !== 'Tab' || !modal.classList.contains('is-open')) return;
-    const focusable = [...dialog.querySelectorAll('button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])')];
-    if (!focusable.length) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
   });
 }
 

@@ -311,15 +311,12 @@ tabindex="0" role="region">
 
 </div>
 
-<div class="skill-modal" id="skill-modal" aria-hidden="true">
-<div class="skill-modal-backdrop" data-skill-close></div>
-<section class="skill-dialog" role="dialog" aria-modal="true" aria-labelledby="skill-modal-title" aria-describedby="skill-modal-description" tabindex="-1">
+<dialog class="skill-dialog" id="skill-modal" aria-labelledby="skill-modal-title" aria-describedby="skill-modal-description">
 <button class="skill-modal-close" type="button" aria-label="Cerrar descripción" data-skill-close>&times;</button>
 <p class="skill-modal-kicker">Habilidad en crecimiento</p>
 <h3 id="skill-modal-title"></h3>
 <p id="skill-modal-description"></p>
-</section>
-</div>
+</dialog>
 
 </section>
 
@@ -641,7 +638,7 @@ Me gustan los proyectos que mezclan una idea útil con prototipos físicos, prog
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.0"></script>
 <script src="supabase-config.js?v=20260911-project-actions-corner"></script>
-<script src="script.js?v=20261027-skill-modal-content"></script>
+<script src="script.js?v=20261027-skill-dialog-stable"></script>
 
 </body>
 </html>
