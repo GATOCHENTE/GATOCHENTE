@@ -1,26 +1,38 @@
-{
-"name":"GATOCHENTE",
-"short_name":"GATOCHENTE",
-"start_url":"/",
-"scope":"/",
-"display":"standalone",
-"background_color":"#fff3e6",
-"theme_color":"#fff3e6",
-"icons":[
-{
-"src":"favicon.png",
-"sizes":"1024x1024",
-"type":"image/png",
-"purpose":"any maskable"
-}
-],
-"screenshots":[
-{
-"src":"img/preview.jpg",
-"sizes":"1280x670",
-"type":"image/jpeg",
-"form_factor":"wide",
-"label":"Vista previa de GATOCHENTE"
-}
-]
+﻿{
+    "name":  "GATOCHENTE",
+    "short_name":  "GATOCHENTE",
+    "start_url":  "/",
+    "scope":  "/",
+    "display":  "standalone",
+    "background_color":  "#fff3e6",
+    "theme_color":  "#fff3e6",
+    "icons":  [
+                  {
+                      "src":  "img/appweb-180.png",
+                      "sizes":  "180x180",
+                      "type":  "image/png",
+                      "purpose":  "any maskable"
+                  },
+                  {
+                      "src":  "img/appweb-192.png",
+                      "sizes":  "192x192",
+                      "type":  "image/png",
+                      "purpose":  "any maskable"
+                  },
+                  {
+                      "src":  "img/appweb-512.png",
+                      "sizes":  "512x512",
+                      "type":  "image/png",
+                      "purpose":  "any maskable"
+                  }
+              ],
+    "screenshots":  [
+                        {
+                            "src":  "img/preview.jpg",
+                            "sizes":  "1280x670",
+                            "type":  "image/jpeg",
+                            "form_factor":  "wide",
+                            "label":  "Vista previa de GATOCHENTE"
+                        }
+                    ]
 }

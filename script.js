@@ -1,7 +1,4 @@
-const year = document.getElementById("year");
-if (year) year.textContent = "© " + new Date().getFullYear() + " GATOCHENTE";
-
-if (year) year.textContent = "\u00A9 " + new Date().getFullYear() + " GATOCHENTE";
+document.querySelectorAll("#year").forEach((year) => { year.textContent = "\u00A9 " + new Date().getFullYear() + " GATOCHENTE"; });
 
 function initExpandableFooter() {
   const footers = document.querySelectorAll('.site-footer');
@@ -13,7 +10,7 @@ function initExpandableFooter() {
       footer.setAttribute('aria-expanded', String(isExpanded));
     }
 
-    footer.addEventListener('click', toggleFooter);
+    footer.addEventListener('click', (event) => { if (event.target.closest('a')) return; toggleFooter(); });
     footer.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
       event.preventDefault();
@@ -2028,6 +2025,29 @@ function initProjectPosts() {
   const avatarUrl = new URL('img/gatochente.jpg', assetBase).href;
   const checkBadgeUrl = new URL('img/check.PNG', assetBase).href;
   const fallbackImage = new URL('img/proyecto2.jpg', assetBase).href;
+  const featuredProjectDefaults = [
+    {
+      title: 'Proyecto Guardián',
+      projectYear: '2026',
+      slug: 'proyecto-guardian',
+      imageUrl: new URL('img/proyecto4.jpg', assetBase).href,
+      summary: 'Prototipo con ESP32, lector NFC y Raspberry Pi 5 para automatizar la identificación y el registro de credenciales mediante Bluetooth.'
+    },
+    {
+      title: 'Detecta y protege',
+      projectYear: '2025',
+      slug: 'detecta-y-protege',
+      imageUrl: new URL('img/proyecto3.jpg', assetBase).href,
+      summary: 'Sistema escolar de seguridad que usa sensores de vibración y luces de alerta para responder ante actividad sísmica.'
+    },
+    {
+      title: 'Innovador paso peatonal',
+      projectYear: '2024',
+      slug: 'paso-peatonal',
+      imageUrl: new URL('img/proyecto2.jpg', assetBase).href,
+      summary: 'Un prototipo con barreras automáticas, semáforo inteligente, temporizador y servomotores para mejorar la seguridad vial.'
+    }
+  ];
   let projectItems = [];
   let isAdmin = false;
   let selectedProjectImage = null;
@@ -2102,12 +2122,18 @@ function initProjectPosts() {
   function createFeaturedProject(item) {
     const article = document.createElement('article');
     article.className = 'featured-card featured-dynamic-card';
-    article.innerHTML = `
-      <img src="${escapeHtmlValue(item.imageUrl || fallbackImage)}" alt="">
-      <div>
-        <p class="project-year">${escapeHtmlValue(item.projectYear)}</p>
-        <h3>${escapeHtmlValue(item.title)}</h3>
-        <p>${escapeHtmlValue(item.summary)}</p>
+    const collaborators = item.slug === 'proyecto-guardian'
+      ? `
+        <div class="featured-collaborators" aria-label="Colaboradores de Proyecto Guardián">
+          <span class="collaborators-label">Colaboradores</span>
+          <div class="project-collaborator-list">
+            <div class="user-chip" data-user="gatochente"><img class="user-avatar" src="${avatarUrl}" alt="Foto de perfil de GATOCHENTE"><span class="user-handle">@gatochente</span><button type="button" class="verification-badge" data-tooltip="Verificado" aria-label="Verificado: ver términos de la insignia"><img src="${checkBadgeUrl}" alt="Verificado"></button></div>
+            <div class="user-chip" data-user="waos"><span class="user-avatar user-avatar-generated user-avatar-waos" aria-hidden="true"><span class="user-avatar-letter">A</span></span><span class="user-handle">@waos</span></div>
+            <div class="user-chip" data-user="zen"><span class="user-avatar user-avatar-generated user-avatar-zen" aria-hidden="true"><span class="user-avatar-letter">A</span></span><span class="user-handle">@zen</span></div>
+          </div>
+        </div>
+      `
+      : `
         <div class="featured-collaborators" aria-label="Colaboradores del proyecto">
           <span class="collaborators-label">Colaborador</span>
           <div class="user-chip" data-user="gatochente">
@@ -2118,6 +2144,14 @@ function initProjectPosts() {
             </button>
           </div>
         </div>
+      `;
+    article.innerHTML = `
+      <img src="${escapeHtmlValue(item.imageUrl || fallbackImage)}" alt="">
+      <div>
+        <p class="project-year">${escapeHtmlValue(item.projectYear)}</p>
+        <h3>${escapeHtmlValue(item.title)}</h3>
+        <p>${escapeHtmlValue(item.summary)}</p>
+        ${collaborators}
         <a href="/proyectos#${escapeHtmlValue(item.slug)}">Ver detalles</a>
       </div>
     `;
@@ -2148,10 +2182,15 @@ function initProjectPosts() {
     }
 
     if (featuredGrid) {
-      featuredGrid.querySelectorAll('.featured-dynamic-card').forEach((card) => card.remove());
-      [...projectItems].slice(0, 2).reverse().forEach((item) => {
-        featuredGrid.prepend(createFeaturedProject(item));
+      const featuredProjects = featuredProjectDefaults.map((project) => {
+        const dynamicProject = projectItems.find((item) =>
+          item.title.trim().toLocaleLowerCase('es') === project.title.toLocaleLowerCase('es')
+        );
+        return dynamicProject
+          ? { ...project, summary: dynamicProject.summary || project.summary, imageUrl: dynamicProject.imageUrl || project.imageUrl }
+          : project;
       });
+      featuredGrid.replaceChildren(...featuredProjects.map(createFeaturedProject));
     }
 
     document.body.classList.toggle('projects-admin-active', isAdmin);
@@ -4028,6 +4067,7 @@ function initAsciiNegativeHero() {
   let metrics = null;
   let frame = 0;
   let timer = null;
+  let visible = false;
 
   function getMetrics() {
     const styles = window.getComputedStyle(canvas);

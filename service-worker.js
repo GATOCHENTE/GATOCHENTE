@@ -1,4 +1,4 @@
-const CACHE_VERSION = "gatochente-v194";
+const CACHE_VERSION = "gatochente-v199";
 const APP_SHELL_FILES = [
 	"./",
 	"./index.html",
@@ -21,6 +21,10 @@ const APP_SHELL_FILES = [
 	"./supabase-config.js",
 	"./manifest.json",
 	"./favicon.png",
+"./img/appweb.png",
+"./img/appweb-180.png",
+"./img/appweb-192.png",
+"./img/appweb-512.png",
 	"./logo.png",
 	"./img/banner.jpg",
 	"./img/check.PNG",
