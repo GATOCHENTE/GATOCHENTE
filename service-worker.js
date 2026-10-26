@@ -1,4 +1,4 @@
-const CACHE_VERSION = "gatochente-v199";
+const CACHE_VERSION = "gatochente-v200";
 const APP_SHELL_FILES = [
 	"./",
 	"./index.html",
@@ -15,6 +15,7 @@ const APP_SHELL_FILES = [
 	"./contacto/index.html",
 	"./catpack/index.html",
 	"./noticias/index.html",
+	"./noticias/noticias.css",
 	"./style.css",
 	"./glyphs/crcglyph.ttf",
 	"./script.js",
