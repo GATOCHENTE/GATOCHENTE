@@ -9498,6 +9498,16 @@ html[data-theme="dark"] .site-footer .footer-logo{box-shadow:none!important;filt
 @media(max-width:720px){.featured-grid{grid-template-columns:minmax(0,1fr);}.featured-card{grid-template-columns:minmax(0,1fr);}.featured-card>img{height:clamp(180px,55vw,250px);min-height:0;}.site-footer .footer-reveal{grid-template-columns:minmax(0,1fr);justify-items:center;text-align:center;}.site-footer .footer-logo{width:min(300px,82vw);max-height:220px;}.site-footer .footer-info strong{font-size:28px;}.site-footer .footer-info p{font-size:15px;}.site-footer .footer-ascii-scroll{grid-column:auto;width:100%;min-height:150px;aspect-ratio:1.5/1;}.site-footer .footer-ascii-scroll pre{font-size:clamp(5px,1.35vw,8px);}.site-footer .footer-social-links{gap:8px;}.site-footer .footer-social-links a{font-size:14px;}}
 @media(prefers-reduced-motion:reduce){.skills-track,.hero-ascii-canvas{animation:none!important;}.navbar,.footer-social-links a{transition:none!important;}}
 
+/* On touch devices, keep footer content in the page's scroll flow. */
+@media(max-width:720px){
+  .site-footer .footer-reveal,
+  .site-footer.is-expanded .footer-reveal{
+    max-height:none;
+    overflow:visible;
+    -webkit-overflow-scrolling:auto;
+  }
+}
+
 /* Equal, generous hit targets for every skill in the carousel. */
 .skills-carousel .skill-logo-card{
   box-sizing:border-box;
