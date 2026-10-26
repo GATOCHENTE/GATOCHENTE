@@ -61,7 +61,7 @@ function initSkillsCarousel() {
   carousel.addEventListener('pointermove', (event) => {
     if (!dragState || dragState.pointerId !== event.pointerId) return;
     const distance = event.clientX - dragState.x;
-    if (Math.abs(distance) > 5 && !pointerMoved) {
+    if (Math.abs(distance) > 10 && !pointerMoved) {
       pointerMoved = true;
       carousel.classList.add('is-dragging');
       carousel.setPointerCapture(event.pointerId);
