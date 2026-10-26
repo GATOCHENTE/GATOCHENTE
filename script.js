@@ -35,17 +35,6 @@ function initSkillsCarousel() {
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const isAnimated = () => !modal.classList.contains('is-open') && !reduceMotion.matches && !carousel.matches(':hover') && !carousel.matches(':focus-within') && !carousel.classList.contains('is-dragging');
   const loopWidth = () => track ? track.getBoundingClientRect().width : 0;
-  const skillDetails = {
-    html: ['HTML5', 'Uso HTML para estructurar páginas accesibles y dar una base clara a mis proyectos web.'],
-    css: ['CSS3', 'Practico CSS para diseñar interfaces, cuidar los detalles visuales y adaptar mis páginas a distintos tamaños de pantalla.'],
-    javascript: ['JavaScript', 'Con JavaScript agrego interacción y comportamiento a mis sitios, desde controles hasta funciones dinámicas.'],
-    python: ['Python', 'Aprendo Python creando programas y explorando cómo automatizar tareas y resolver problemas.'],
-    arduino: ['Arduino', 'Con Arduino experimento con sensores, componentes y prototipos que conectan código con el mundo físico.'],
-    raspberry: ['Raspberry Pi', 'Uso Raspberry Pi para aprender sobre computadoras pequeñas, sistemas y proyectos conectados.'],
-    github: ['GitHub', 'Uso GitHub para guardar y compartir el código de mis proyectos y seguir su evolución.'],
-    figma: ['Figma', 'Exploro Figma para organizar ideas de interfaz, probar composiciones y planear experiencias visuales.'],
-    linux: ['Linux', 'Estoy aprendiendo Linux y su terminal para entender mejor los sistemas, administrar herramientas y trabajar en proyectos tecnológicos.']
-  };
   let activeCard = null;
   let dragState = null;
   let pointerMoved = false;
@@ -127,13 +116,14 @@ function initSkillsCarousel() {
   });
 
   carousel.addEventListener('click', (event) => {
-    const card = event.target.closest('.skill-logo-card[data-skill]');
+    const card = event.target.closest('.skill-logo-card[data-skill-title][data-skill-description]');
     if (!card || pointerMoved) return;
-    const detail = skillDetails[card.dataset.skill];
-    if (!detail) return;
+    const skillTitle = card.dataset.skillTitle?.trim();
+    const skillDescription = card.dataset.skillDescription?.trim();
+    if (!skillTitle || !skillDescription) return;
     activeCard = card;
-    title.textContent = detail[0];
-    description.textContent = detail[1];
+    title.textContent = skillTitle;
+    description.textContent = skillDescription;
     modal.classList.add('is-open');
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('modal-open');
