@@ -3123,11 +3123,22 @@ overflow:hidden;
 position:relative;
 width:100%;
 padding:8px 0 14px;
+touch-action:pan-y;
+cursor:grab;
+outline:none;
 
 mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
 -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
 
 }
+
+.skills-carousel{overflow:hidden;scrollbar-width:none;scroll-behavior:auto;}
+.skills-carousel::-webkit-scrollbar{display:none;}
+
+.skills-carousel:focus-visible{outline:3px solid rgba(31,122,140,.38);outline-offset:4px;border-radius:16px;}
+.skills-carousel.is-dragging{cursor:grabbing;user-select:none;}
+.skills-carousel.is-dragging .skills-track{animation-play-state:paused!important;}
+.skills-carousel.is-dragging .skill-logo-card{pointer-events:none;}
 
 .skills-carousel:hover .skills-track,
 .skills-carousel:focus-within .skills-track{
@@ -3144,6 +3155,7 @@ flex:0 0 auto;
 min-width:max-content;
 padding-right:var(--skills-gap);
 animation:skills-scroll 34s linear infinite;
+will-change:transform;
 
 }
 
@@ -3153,6 +3165,7 @@ display:flex;
 align-items:center;
 justify-content:center;
 gap:12px;
+flex:0 0 auto;
 
 min-width:168px;
 height:74px;
@@ -3162,6 +3175,10 @@ background:linear-gradient(145deg,rgba(255,255,255,0.8),rgba(255,255,255,0.38));
 border:1px solid rgba(255,255,255,0.64);
 border-radius:14px;
 color:rgba(64,60,55,0.82);
+font-family:inherit;
+appearance:none;
+-webkit-appearance:none;
+cursor:pointer;
 
 font-size:14px;
 font-weight:800;
@@ -3175,6 +3192,61 @@ backdrop-filter:blur(18px) saturate(150%);
 transition:transform .35s var(--ease-spring), box-shadow .35s ease, border-color .35s ease, color .35s ease;
 
 }
+
+.skill-logo-card:focus-visible{outline:3px solid rgba(31,122,140,.48);outline-offset:3px;}
+.skills-track[aria-hidden="true"] .skill-logo-card{pointer-events:none;}
+.skills-carousel.is-scripted .skills-track{animation:none!important;transform:translateX(calc(-1 * var(--skills-offset,0px)));}
+.skills-carousel.is-scripted .skills-track[aria-hidden="true"]{display:flex!important;}
+
+.skill-modal{
+position:fixed;
+inset:0;
+z-index:3000;
+display:grid;
+place-items:center;
+padding:20px;
+opacity:0;
+visibility:hidden;
+pointer-events:none;
+transition:opacity .24s ease,visibility .24s ease;
+}
+.skill-modal.is-open{opacity:1;visibility:visible;pointer-events:auto;}
+.skill-modal-backdrop{position:absolute;inset:0;background:rgba(22,25,30,.52);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);}
+.skill-dialog{
+position:relative;
+width:min(100%,440px);
+padding:34px clamp(22px,5vw,38px) 30px;
+border:1px solid rgba(255,255,255,.72);
+border-radius:26px;
+background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(255,250,244,.9));
+box-shadow:0 28px 80px rgba(20,24,30,.25),inset 0 1px 0 rgba(255,255,255,.8);
+color:var(--ink);
+transform:translateY(14px) scale(.98);
+transition:transform .32s var(--ease-spring);
+}
+.skill-modal.is-open .skill-dialog{transform:translateY(0) scale(1);}
+.skill-modal-close{
+position:absolute;
+top:12px;
+right:14px;
+width:40px;
+height:40px;
+display:grid;
+place-items:center;
+border:1px solid rgba(74,44,24,.12);
+border-radius:50%;
+background:rgba(255,255,255,.72);
+color:var(--ink);
+font-size:26px;
+line-height:1;
+cursor:pointer;
+}
+.skill-modal-close:focus-visible{outline:3px solid rgba(31,122,140,.5);outline-offset:2px;}
+.skill-modal-kicker{margin:0 0 9px;color:var(--brand);font-size:12px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;}
+.skill-dialog h3{margin:0 42px 12px 0;color:var(--ink);font-size:clamp(25px,5vw,34px);line-height:1.12;}
+.skill-dialog > p:last-child{margin:0;color:var(--muted);font-size:16px;line-height:1.7;}
+html[data-theme="dark"] .skill-dialog{border-color:rgba(255,255,255,.16);background:linear-gradient(145deg,rgba(35,42,52,.98),rgba(21,26,34,.96));}
+html[data-theme="dark"] .skill-modal-close{border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.08);}
 
 .skill-logo-card img{
 
@@ -7961,6 +8033,10 @@ mask-image:none;
 animation:none !important;
 
 }
+
+.skills-carousel{overflow:hidden;}
+.skills-carousel.is-scripted .skills-track{animation:none!important;transform:translateX(calc(-1 * var(--skills-offset,0px)))!important;}
+.skills-carousel.is-scripted .skills-track[aria-hidden="true"]{display:flex!important;}
 
 .page-loader-logo{
 

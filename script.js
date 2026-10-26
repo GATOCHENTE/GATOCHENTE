@@ -21,6 +21,153 @@ function initExpandableFooter() {
 
 initExpandableFooter();
 
+function initSkillsCarousel() {
+  const carousel = document.querySelector('.skills-carousel');
+  const modal = document.getElementById('skill-modal');
+  if (!carousel || !modal) return;
+
+  const track = carousel.querySelector('.skills-track:not([aria-hidden="true"])');
+  const dialog = modal.querySelector('.skill-dialog');
+  const title = modal.querySelector('#skill-modal-title');
+  const description = modal.querySelector('#skill-modal-description');
+  const closeButton = modal.querySelector('.skill-modal-close');
+  const duplicateTrack = carousel.querySelector('.skills-track[aria-hidden="true"]');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const isAnimated = () => !modal.classList.contains('is-open') && !reduceMotion.matches && !carousel.matches(':hover') && !carousel.matches(':focus-within') && !carousel.classList.contains('is-dragging');
+  const loopWidth = () => track ? track.getBoundingClientRect().width : 0;
+  const skillDetails = {
+    html: ['HTML5', 'Uso HTML para estructurar páginas accesibles y dar una base clara a mis proyectos web.'],
+    css: ['CSS3', 'Practico CSS para diseñar interfaces, cuidar los detalles visuales y adaptar mis páginas a distintos tamaños de pantalla.'],
+    javascript: ['JavaScript', 'Con JavaScript agrego interacción y comportamiento a mis sitios, desde controles hasta funciones dinámicas.'],
+    python: ['Python', 'Aprendo Python creando programas y explorando cómo automatizar tareas y resolver problemas.'],
+    arduino: ['Arduino', 'Con Arduino experimento con sensores, componentes y prototipos que conectan código con el mundo físico.'],
+    raspberry: ['Raspberry Pi', 'Uso Raspberry Pi para aprender sobre computadoras pequeñas, sistemas y proyectos conectados.'],
+    github: ['GitHub', 'Uso GitHub para guardar y compartir el código de mis proyectos y seguir su evolución.'],
+    figma: ['Figma', 'Exploro Figma para organizar ideas de interfaz, probar composiciones y planear experiencias visuales.'],
+    linux: ['Linux', 'Estoy aprendiendo Linux y su terminal para entender mejor los sistemas, administrar herramientas y trabajar en proyectos tecnológicos.']
+  };
+  let activeCard = null;
+  let dragState = null;
+  let pointerMoved = false;
+  let offset = 0;
+  let previousFrame = 0;
+  let animationFrame = 0;
+
+  carousel.classList.add('is-scripted');
+  carousel.style.setProperty('--skills-offset', '0px');
+
+  function animateSkills(time) {
+    if (previousFrame && isAnimated()) {
+      offset += (time - previousFrame) * 0.035;
+      const width = loopWidth();
+      if (width && offset >= width) offset %= width;
+      carousel.style.setProperty('--skills-offset', `${offset}px`);
+      if (duplicateTrack) duplicateTrack.style.transform = `translateX(${-offset}px)`;
+    }
+    previousFrame = time;
+    animationFrame = window.requestAnimationFrame(animateSkills);
+  }
+
+  function setOffset(nextOffset) {
+    const width = loopWidth();
+    offset = width ? ((nextOffset % width) + width) % width : 0;
+    carousel.style.setProperty('--skills-offset', `${offset}px`);
+    if (duplicateTrack) duplicateTrack.style.transform = `translateX(${-offset}px)`;
+  }
+
+  animationFrame = window.requestAnimationFrame(animateSkills);
+  reduceMotion.addEventListener?.('change', () => { previousFrame = 0; });
+
+  carousel.addEventListener('wheel', (event) => {
+    event.preventDefault();
+    const delta = Math.abs(event.deltaY) > Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
+    setOffset(offset + delta);
+  }, { passive: false });
+
+  carousel.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    dragState = { x: event.clientX, offset, pointerId: event.pointerId };
+    pointerMoved = false;
+    carousel.classList.add('is-dragging');
+  });
+
+  carousel.addEventListener('pointermove', (event) => {
+    if (!dragState || dragState.pointerId !== event.pointerId) return;
+    const distance = event.clientX - dragState.x;
+    if (Math.abs(distance) > 5 && !pointerMoved) {
+      pointerMoved = true;
+      carousel.setPointerCapture(event.pointerId);
+    }
+    if (pointerMoved) {
+      const width = loopWidth();
+      offset = width ? ((dragState.offset - distance) % width + width) % width : 0;
+      carousel.style.setProperty('--skills-offset', `${offset}px`);
+      if (duplicateTrack) duplicateTrack.style.transform = `translateX(${-offset}px)`;
+    }
+  });
+
+  function finishDrag(event) {
+    if (!dragState || (event && dragState.pointerId !== event.pointerId)) return;
+    dragState = null;
+    carousel.classList.remove('is-dragging');
+    window.setTimeout(() => { pointerMoved = false; }, 0);
+  }
+
+  carousel.addEventListener('pointerup', finishDrag);
+  carousel.addEventListener('pointercancel', finishDrag);
+  carousel.addEventListener('lostpointercapture', finishDrag);
+
+  carousel.addEventListener('keydown', (event) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    if (event.target.closest('.skill-logo-card')) return;
+    event.preventDefault();
+    if (event.key === 'Home') setOffset(0);
+    else if (event.key === 'End') setOffset(loopWidth() - carousel.clientWidth);
+    else setOffset(offset + (event.key === 'ArrowRight' ? 180 : -180));
+  });
+
+  carousel.addEventListener('click', (event) => {
+    const card = event.target.closest('.skill-logo-card[data-skill]');
+    if (!card || pointerMoved) return;
+    const detail = skillDetails[card.dataset.skill];
+    if (!detail) return;
+    activeCard = card;
+    title.textContent = detail[0];
+    description.textContent = detail[1];
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+    document.documentElement.classList.add('modal-open');
+    closeButton.focus();
+  });
+
+  function closeSkillModal() {
+    if (!modal.classList.contains('is-open')) return;
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
+    document.documentElement.classList.remove('modal-open');
+    if (activeCard && activeCard.isConnected) activeCard.focus();
+    activeCard = null;
+  }
+
+  modal.addEventListener('click', (event) => {
+    if (event.target.closest('[data-skill-close]')) closeSkillModal();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && modal.classList.contains('is-open')) { event.stopPropagation(); closeSkillModal(); }
+    if (event.key !== 'Tab' || !modal.classList.contains('is-open')) return;
+    const focusable = [...dialog.querySelectorAll('button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])')];
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  });
+}
+
+initSkillsCarousel();
+
 const pageLoader = document.getElementById("page-loader");
 
 function hidePageLoader() {

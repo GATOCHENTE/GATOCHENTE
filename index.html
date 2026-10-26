@@ -285,16 +285,18 @@ Aprendo combinando software, diseño y electrónica. Cada habilidad aparece porq
 </p>
 </div>
 
-<div class="skills-carousel" aria-label="Carrusel de plataformas y software en aprendizaje">
+<div class="skills-carousel" aria-label="Habilidades en crecimiento. Desliza, usa las flechas o el teclado para explorar."
+tabindex="0" role="region">
 <div class="skills-track">
-<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/html5/6f6a64" alt="" aria-hidden="true"><span>HTML5</span></div>
-<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/css/6f6a64" alt="" aria-hidden="true"><span>CSS3</span></div>
-<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/javascript/6f6a64" alt="" aria-hidden="true"><span>JavaScript</span></div>
-<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/python/6f6a64" alt="" aria-hidden="true"><span>Python</span></div>
-<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/arduino/6f6a64" alt="" aria-hidden="true"><span>Arduino</span></div>
-<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/raspberrypi/6f6a64" alt="" aria-hidden="true"><span>Raspberry Pi</span></div>
-<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/github/6f6a64" alt="" aria-hidden="true"><span>GitHub</span></div>
-<div class="skill-logo-card"><img src="https://cdn.simpleicons.org/figma/6f6a64" alt="" aria-hidden="true"><span>Figma</span></div>
+<button class="skill-logo-card" type="button" data-skill="html" aria-label="HTML5. Ver descripción"><img src="https://cdn.simpleicons.org/html5/6f6a64" alt="" aria-hidden="true"><span>HTML5</span></button>
+<button class="skill-logo-card" type="button" data-skill="css" aria-label="CSS3. Ver descripción"><img src="https://cdn.simpleicons.org/css/6f6a64" alt="" aria-hidden="true"><span>CSS3</span></button>
+<button class="skill-logo-card" type="button" data-skill="javascript" aria-label="JavaScript. Ver descripción"><img src="https://cdn.simpleicons.org/javascript/6f6a64" alt="" aria-hidden="true"><span>JavaScript</span></button>
+<button class="skill-logo-card" type="button" data-skill="python" aria-label="Python. Ver descripción"><img src="https://cdn.simpleicons.org/python/6f6a64" alt="" aria-hidden="true"><span>Python</span></button>
+<button class="skill-logo-card" type="button" data-skill="arduino" aria-label="Arduino. Ver descripción"><img src="https://cdn.simpleicons.org/arduino/6f6a64" alt="" aria-hidden="true"><span>Arduino</span></button>
+<button class="skill-logo-card" type="button" data-skill="raspberry" aria-label="Raspberry Pi. Ver descripción"><img src="https://cdn.simpleicons.org/raspberrypi/6f6a64" alt="" aria-hidden="true"><span>Raspberry Pi</span></button>
+<button class="skill-logo-card" type="button" data-skill="github" aria-label="GitHub. Ver descripción"><img src="https://cdn.simpleicons.org/github/6f6a64" alt="" aria-hidden="true"><span>GitHub</span></button>
+<button class="skill-logo-card" type="button" data-skill="figma" aria-label="Figma. Ver descripción"><img src="https://cdn.simpleicons.org/figma/6f6a64" alt="" aria-hidden="true"><span>Figma</span></button>
+<button class="skill-logo-card" type="button" data-skill="linux" aria-label="Linux. Ver descripción"><img src="img/tux.svg" alt="" aria-hidden="true"><span>Linux</span></button>
 </div>
 <div class="skills-track" aria-hidden="true">
 <div class="skill-logo-card"><img src="https://cdn.simpleicons.org/html5/6f6a64" alt=""><span>HTML5</span></div>
@@ -305,9 +307,20 @@ Aprendo combinando software, diseño y electrónica. Cada habilidad aparece porq
 <div class="skill-logo-card"><img src="https://cdn.simpleicons.org/raspberrypi/6f6a64" alt=""><span>Raspberry Pi</span></div>
 <div class="skill-logo-card"><img src="https://cdn.simpleicons.org/github/6f6a64" alt=""><span>GitHub</span></div>
 <div class="skill-logo-card"><img src="https://cdn.simpleicons.org/figma/6f6a64" alt=""><span>Figma</span></div>
+<div class="skill-logo-card"><img src="img/tux.svg" alt=""><span>Linux</span></div>
 </div>
 </div>
 
+</div>
+
+<div class="skill-modal" id="skill-modal" aria-hidden="true">
+<div class="skill-modal-backdrop" data-skill-close></div>
+<section class="skill-dialog" role="dialog" aria-modal="true" aria-labelledby="skill-modal-title" aria-describedby="skill-modal-description" tabindex="-1">
+<button class="skill-modal-close" type="button" aria-label="Cerrar descripción" data-skill-close>&times;</button>
+<p class="skill-modal-kicker">Habilidad en crecimiento</p>
+<h3 id="skill-modal-title"></h3>
+<p id="skill-modal-description"></p>
+</section>
 </div>
 
 </section>
@@ -630,7 +643,7 @@ Me gustan los proyectos que mezclan una idea útil con prototipos físicos, prog
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.0"></script>
 <script src="supabase-config.js?v=20260911-project-actions-corner"></script>
-<script src="script.js?v=20261026-featured-collabs"></script>
+<script src="script.js?v=20261027-skills-carousel"></script>
 
 </body>
 </html>
