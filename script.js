@@ -88,7 +88,6 @@ function initSkillsCarousel() {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     dragState = { x: event.clientX, offset, pointerId: event.pointerId };
     pointerMoved = false;
-    carousel.classList.add('is-dragging');
   });
 
   carousel.addEventListener('pointermove', (event) => {
@@ -96,6 +95,7 @@ function initSkillsCarousel() {
     const distance = event.clientX - dragState.x;
     if (Math.abs(distance) > 5 && !pointerMoved) {
       pointerMoved = true;
+      carousel.classList.add('is-dragging');
       carousel.setPointerCapture(event.pointerId);
     }
     if (pointerMoved) {

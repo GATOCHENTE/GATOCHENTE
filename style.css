@@ -3258,6 +3258,8 @@ object-fit:contain;
 
 }
 
+.skill-logo-card img[src*="tux.svg"]{filter:grayscale(1) sepia(.12) saturate(.35);opacity:.82;}
+
 .skill-logo-card:hover,
 .skill-logo-card:focus-within{
 
